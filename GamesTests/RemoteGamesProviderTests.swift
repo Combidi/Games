@@ -85,7 +85,7 @@ final class RemoteGamesProviderTests: XCTestCase {
 
 // MARK: - Helpers
 
-final class HttpClientSpy: HttpClient {
+private final class HttpClientSpy: HttpClient {
     
     var stub: Result<Data, Error> = .success(Data())
     
