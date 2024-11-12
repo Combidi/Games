@@ -7,11 +7,11 @@ import XCTest
 
 final class RemoteGamesProviderTests: XCTestCase {
     
-    func test_getGames_performsPostRequest() throws {
+    func test_getGames_performsPostRequest() async throws {
         let client = HttpClientSpy()
         let sut = RemoteGamesProvider(client: client)
         
-        _ = try? sut.getGames()
+        _ = try? await sut.getGames()
         
         let request = try XCTUnwrap(client.capturedRequest)
         
@@ -21,15 +21,18 @@ final class RemoteGamesProviderTests: XCTestCase {
         XCTAssertEqual(request.httpBody.map { String(data: $0, encoding: .utf8) }, "Fields name;")
     }
     
-    func test_getGames_deliversErrorOnClientError() {
+    func test_getGames_deliversErrorOnClientError() async {
         let client = HttpClientSpy()
         let sut = RemoteGamesProvider(client: client)
         client.stub = .failure(NSError(domain: "any", code: 0))
         
-        XCTAssertThrowsError(try sut.getGames())
+        do {
+            let result = try await sut.getGames()
+            XCTFail("Expected error, got \(result) instead")
+        } catch {}
     }
     
-    func test_getGames_deliversGamesOnValidJsonGamesData() throws {
+    func test_getGames_deliversGamesOnValidJsonGamesData() async throws {
         let client = HttpClientSpy()
         let sut = RemoteGamesProvider(client: client)
         let gamesJson = """
@@ -56,11 +59,11 @@ final class RemoteGamesProviderTests: XCTestCase {
             Game(id: 95080, name: "Dotra")
         ]
         
-        let games = try sut.getGames()
+        let games = try await sut.getGames()
         XCTAssertEqual(games, expectedGames)
     }
     
-    func test_getGames_deliversErrorOnInvalidJsonGamesData() {
+    func test_getGames_deliversErrorOnInvalidJsonGamesData() async {
         let client = HttpClientSpy()
         let sut = RemoteGamesProvider(client: client)
         let gamesJson = """
@@ -79,7 +82,10 @@ final class RemoteGamesProviderTests: XCTestCase {
         """
         client.stub = .success(Data(gamesJson.utf8))
         
-        XCTAssertThrowsError(try sut.getGames())
+        do {
+            let result = try await sut.getGames()
+            XCTFail("Expected error, got \(result) instead")
+        } catch {}
     }
 }
 

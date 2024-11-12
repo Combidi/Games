@@ -17,13 +17,13 @@ struct RemoteGamesProvider {
         self.client = client
     }
         
-    func getGames() throws -> [Game] {
+    func getGames() async throws -> [Game] {
         let url = URL(string: "https://api.example.com/games")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = Data("Fields name;".utf8)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let data = try client.perform(request)
+        let data = try await client.perform(request)
         let decodableGames = try JSONDecoder().decode([DecodableGame].self, from: data)
         let games = decodableGames.map {
             Game(id: $0.id, name: $0.name)
