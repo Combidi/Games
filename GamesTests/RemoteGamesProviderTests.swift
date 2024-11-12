@@ -6,11 +6,11 @@ import XCTest
 @testable import Games
 
 final class RemoteGamesProviderTests: XCTestCase {
+
+    private lazy var client = HttpClientSpy()
+    private lazy var sut = RemoteGamesProvider(client: client)
     
     func test_getGames_performsPostRequest() async throws {
-        let client = HttpClientSpy()
-        let sut = RemoteGamesProvider(client: client)
-        
         _ = try? await sut.getGames()
         
         let request = try XCTUnwrap(client.capturedRequest)
@@ -22,8 +22,6 @@ final class RemoteGamesProviderTests: XCTestCase {
     }
     
     func test_getGames_deliversErrorOnClientError() async {
-        let client = HttpClientSpy()
-        let sut = RemoteGamesProvider(client: client)
         client.stub = .failure(NSError(domain: "any", code: 0))
         
         do {
@@ -33,8 +31,6 @@ final class RemoteGamesProviderTests: XCTestCase {
     }
     
     func test_getGames_deliversGamesOnValidJsonGamesData() async throws {
-        let client = HttpClientSpy()
-        let sut = RemoteGamesProvider(client: client)
         let gamesJson = """
         [
           {
@@ -64,8 +60,6 @@ final class RemoteGamesProviderTests: XCTestCase {
     }
     
     func test_getGames_deliversErrorOnInvalidJsonGamesData() async {
-        let client = HttpClientSpy()
-        let sut = RemoteGamesProvider(client: client)
         let gamesJson = """
         [
           {
