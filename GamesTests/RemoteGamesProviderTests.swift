@@ -39,7 +39,7 @@ final class RemoteGamesProviderTests: XCTestCase {
         _ = try? sut.getGames()
         
         let request = try XCTUnwrap(client.capturedRequest)
-    
+        
         XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(request.url, URL(string: "https://api.example.com/games")!)
         XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "application/json")
@@ -83,6 +83,28 @@ final class RemoteGamesProviderTests: XCTestCase {
         
         let games = try! sut.getGames()
         XCTAssertEqual(games, expectedGames)
+    }
+    
+    func test_getGames_deliversErrorOnInvalidJsonGamesData() {
+        let client = HttpClientSpy()
+        let sut = RemoteGamesProvider(client: client)
+        let gamesJson = """
+        [
+          {
+            "id": 131913
+          },
+          {
+            "name": "Commando"
+          },
+          {
+            "id": 95080,
+            "name": "Dotra"
+          }
+        ]
+        """
+        client.stub = .success(Data(gamesJson.utf8))
+        
+        XCTAssertThrowsError(try sut.getGames())
     }
 }
 
