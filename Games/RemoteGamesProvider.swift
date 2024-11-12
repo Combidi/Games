@@ -4,10 +4,6 @@
 
 import Foundation
 
-protocol HttpClient {
-    func perform(_ request: URLRequest) throws -> Data
-}
-
 struct RemoteGamesProvider {
     private let client: HttpClient
     
