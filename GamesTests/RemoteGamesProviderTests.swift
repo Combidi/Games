@@ -11,18 +11,6 @@ struct Game: Equatable, Decodable {
     let name: String
 }
 
-final class HttpClientSpy {
-    
-    var stub: Result<Data, Error> = .success(Data())
-    
-    private(set) var capturedRequest: URLRequest?
-    
-    func perform(_ request: URLRequest) throws -> Data {
-        capturedRequest = request
-        return try stub.get()
-    }
-}
-
 struct RemoteGamesProvider {
     private let client: HttpClientSpy
     
@@ -95,5 +83,19 @@ final class RemoteGamesProviderTests: XCTestCase {
         
         let games = try! sut.getGames()
         XCTAssertEqual(games, expectedGames)
+    }
+}
+
+// MARK: - Helpers
+
+final class HttpClientSpy {
+    
+    var stub: Result<Data, Error> = .success(Data())
+    
+    private(set) var capturedRequest: URLRequest?
+    
+    func perform(_ request: URLRequest) throws -> Data {
+        capturedRequest = request
+        return try stub.get()
     }
 }
