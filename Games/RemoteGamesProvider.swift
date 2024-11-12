@@ -5,6 +5,12 @@
 import Foundation
 
 struct RemoteGamesProvider {
+
+    private struct DecodableGame: Decodable {
+        let id: Int
+        let name: String
+    }
+
     private let client: HttpClient
     
     init(client: HttpClient) {
@@ -18,7 +24,10 @@ struct RemoteGamesProvider {
         request.httpBody = Data("Fields name;".utf8)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         let data = try client.perform(request)
-        let games = try JSONDecoder().decode([Game].self, from: data)
+        let decodableGames = try JSONDecoder().decode([DecodableGame].self, from: data)
+        let games = decodableGames.map {
+            Game(id: $0.id, name: $0.name)
+        }
         return games
     }
 }
