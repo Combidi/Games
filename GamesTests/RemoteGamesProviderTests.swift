@@ -16,7 +16,7 @@ final class RemoteGamesProviderTests: XCTestCase {
         let request = try XCTUnwrap(client.capturedRequest)
         
         XCTAssertEqual(request.httpMethod, "POST")
-        XCTAssertEqual(request.url, URL(string: "https://api.example.com/games")!)
+        XCTAssertEqual(request.url, URL(string: "https://api.igdb.com/v4/games")!)
         XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "application/json")
         XCTAssertEqual(request.httpBody.map { String(data: $0, encoding: .utf8) }, "Fields name;")
     }

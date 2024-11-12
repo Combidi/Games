@@ -18,7 +18,7 @@ struct RemoteGamesProvider {
     }
         
     func getGames() async throws -> [Game] {
-        let url = URL(string: "https://api.example.com/games")!
+        let url = URL(string: "https://api.igdb.com/v4/games")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = Data("Fields name;".utf8)
