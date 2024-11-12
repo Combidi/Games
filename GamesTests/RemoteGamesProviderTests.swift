@@ -97,8 +97,8 @@ private final class HttpClientSpy: HttpClient {
     
     private(set) var capturedRequest: URLRequest?
     
-    func perform(_ request: URLRequest) throws -> Data {
+    func perform(_ request: URLRequest) throws -> (Data, HTTPURLResponse) {
         capturedRequest = request
-        return try stub.get()
+        return (try stub.get(), HTTPURLResponse())
     }
 }

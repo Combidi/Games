@@ -23,7 +23,7 @@ struct RemoteGamesProvider {
         request.httpMethod = "POST"
         request.httpBody = Data("Fields name;".utf8)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let data = try await client.perform(request)
+        let (data, _) = try await client.perform(request)
         let decodableGames = try JSONDecoder().decode([DecodableGame].self, from: data)
         let games = decodableGames.map {
             Game(id: $0.id, name: $0.name)
