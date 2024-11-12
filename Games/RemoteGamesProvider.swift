@@ -21,7 +21,7 @@ struct RemoteGamesProvider {
         let url = URL(string: "https://api.igdb.com/v4/games")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.httpBody = Data("Fields name;".utf8)
+        request.httpBody = Data("fields name;".utf8)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         let (data, _) = try await client.perform(request)
         let decodableGames = try JSONDecoder().decode([DecodableGame].self, from: data)
