@@ -11,6 +11,10 @@ struct Game: Equatable, Decodable {
     let name: String
 }
 
+private protocol HttpClient {
+    func perform(_ request: URLRequest) throws -> Data
+}
+
 struct RemoteGamesProvider {
     private let client: HttpClientSpy
     
@@ -110,7 +114,7 @@ final class RemoteGamesProviderTests: XCTestCase {
 
 // MARK: - Helpers
 
-final class HttpClientSpy {
+final class HttpClientSpy: HttpClient {
     
     var stub: Result<Data, Error> = .success(Data())
     
