@@ -54,7 +54,7 @@ final class RemoteGamesProviderTests: XCTestCase {
         XCTAssertThrowsError(try sut.getGames())
     }
     
-    func test_getGames_deliversGamesOnValidJsonGamesData() {
+    func test_getGames_deliversGamesOnValidJsonGamesData() throws {
         let client = HttpClientSpy()
         let sut = RemoteGamesProvider(client: client)
         let gamesJson = """
@@ -81,7 +81,7 @@ final class RemoteGamesProviderTests: XCTestCase {
             Game(id: 95080, name: "Dotra")
         ]
         
-        let games = try! sut.getGames()
+        let games = try sut.getGames()
         XCTAssertEqual(games, expectedGames)
     }
     
