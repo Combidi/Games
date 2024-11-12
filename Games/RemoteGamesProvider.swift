@@ -4,11 +4,6 @@
 
 import Foundation
 
-struct Game: Equatable, Decodable {
-    let id: Int
-    let name: String
-}
-
 protocol HttpClient {
     func perform(_ request: URLRequest) throws -> Data
 }
