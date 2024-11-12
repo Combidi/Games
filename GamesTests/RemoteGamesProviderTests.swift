@@ -11,14 +11,14 @@ struct Game: Equatable, Decodable {
     let name: String
 }
 
-private protocol HttpClient {
+protocol HttpClient {
     func perform(_ request: URLRequest) throws -> Data
 }
 
 struct RemoteGamesProvider {
-    private let client: HttpClientSpy
+    private let client: HttpClient
     
-    init(client: HttpClientSpy) {
+    init(client: HttpClient) {
         self.client = client
     }
         
