@@ -33,26 +33,34 @@ final class RemoteGamesProviderTests: XCTestCase {
     func test_getGames_deliversGamesOnValidJsonGamesData() async throws {
         let gamesJson = """
         [
-          {
-            "id": 131913,
-            "name": "Maji Kyun! Renaissance"
-          },
-          {
-            "id": 5668,
-            "name": "Commando"
-          },
-          {
-            "id": 95080,
-            "name": "Dotra"
-          }
+            {
+                "id": 131913,
+                "cover": {
+                    "id": 267633,
+                    "image_id": "co5qi9"
+                },
+                "name": "Maji Kyun! Renaissance"
+            },
+            {
+                "id": 5668,
+                "cover": {
+                    "id": 119375,
+                    "image_id": "co2k3z"
+                },
+                "name": "Commando"
+            },
+            {
+                "id": 95080,
+                "name": "Dotra"
+            }
         ]
         """
         client.stub = .success(Data(gamesJson.utf8))
         
         let expectedGames = [
-            Game(id: 131913, name: "Maji Kyun! Renaissance"),
-            Game(id: 5668, name: "Commando"),
-            Game(id: 95080, name: "Dotra")
+            Game(id: 131913, name: "Maji Kyun! Renaissance", imageId: "co5qi9"),
+            Game(id: 5668, name: "Commando", imageId: "co2k3z"),
+            Game(id: 95080, name: "Dotra", imageId: nil)
         ]
         
         let games = try await sut.getGames()

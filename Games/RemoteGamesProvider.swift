@@ -9,7 +9,13 @@ struct RemoteGamesProvider {
     private struct DecodableGame: Decodable {
         let id: Int
         let name: String
+        let cover: DecodableCoverImage?
     }
+    
+    private struct DecodableCoverImage: Decodable {
+        let image_id: String
+    }
+    
     private let client: HttpClient
     
     init(client: HttpClient) {
@@ -25,7 +31,7 @@ struct RemoteGamesProvider {
         let (data, _) = try await client.perform(request)
         let decodableGames = try JSONDecoder().decode([DecodableGame].self, from: data)
         let games = decodableGames.map {
-            Game(id: $0.id, name: $0.name)
+            Game(id: $0.id, name: $0.name, imageId: $0.cover?.image_id)
         }
         return games
     }
