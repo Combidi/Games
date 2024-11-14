@@ -56,15 +56,18 @@ final class RemoteGamesProviderTests: XCTestCase {
         ]
         """
         client.stub = .success(Data(gamesJson.utf8))
+                
+        let games = try await sut.getGames()
         
         let expectedGames = [
             Game(id: 131913, name: "Maji Kyun! Renaissance", imageId: "co5qi9"),
             Game(id: 5668, name: "Commando", imageId: "co2k3z"),
             Game(id: 95080, name: "Dotra", imageId: nil)
         ]
-        
-        let games = try await sut.getGames()
-        XCTAssertEqual(games, expectedGames)
+        XCTAssertEqual(games.count, 3)
+        XCTAssertEqual(games[0], expectedGames[0])
+        XCTAssertEqual(games[1], expectedGames[1])
+        XCTAssertEqual(games[2], expectedGames[2])
     }
     
     func test_getGames_deliversErrorOnInvalidJsonGamesData() async {
