@@ -15,10 +15,10 @@ final class GamesLoadingViewModel {
     }
     
     private let loadGames: () throws -> [Game]
-    private let reloadGames: () -> Void
+    private let reloadGames: () throws -> [Game]
     init(
         loadGames: @escaping () throws -> [Game],
-        reloadGames: @escaping () -> Void
+        reloadGames: @escaping () throws -> [Game]
     ) {
         self.loadGames = loadGames
         self.reloadGames = reloadGames
@@ -28,17 +28,14 @@ final class GamesLoadingViewModel {
     
     func load() {
         if state != .loading { state = .loading }
-        do {
-            let games = try loadGames()
-            state = .loaded(games)
-        } catch {
-            state = .error
-        }
+        do { state = .loaded(try loadGames()) }
+        catch { state = .error }
     }
     
     func reload() {
-        reloadGames()
-    }
+        do { state = .loaded(try reloadGames()) }
+        catch { state = .error }
+     }
 }
 
 final class GamesLoadingViewModelTests: XCTestCase {
@@ -100,6 +97,37 @@ final class GamesLoadingViewModelTests: XCTestCase {
         
         XCTAssertEqual(loader.reloadGamesCallCount, 1)
     }
+    
+    func test_states_duringReloadingGames() {
+        sut.load()
+        
+        var cancellables: Set<AnyCancellable> = []
+        var capturedStates: [GamesLoadingViewModel.LoadingState] = []
+        sut.$state
+            .dropFirst()
+            .sink { capturedStates.append($0) }
+            .store(in: &cancellables)
+
+        
+        loader.reloadGamesStub = .failure(NSError(domain: "any", code: 0))
+        
+        sut.reload()
+        
+        XCTAssertEqual(
+            capturedStates, [.error],
+            "Expected error state on loading failure"
+        )
+
+        let game = Game(id: 0, name: "Nice game", imageId: nil)
+        loader.reloadGamesStub = .success([game])
+        
+        sut.reload()
+
+        XCTAssertEqual(
+            capturedStates, [.error, .loaded([game])],
+            "Expected second loading state followed by presentation state after successful loading"
+        )
+    }
 }
 
 // MARK: Helpers
@@ -116,7 +144,10 @@ final private class LoaderSpy {
     
     private(set) var reloadGamesCallCount = 0
     
-    func reloadGames() {
+    var reloadGamesStub: Result<[Game], Error> = .success([])
+    
+    func reloadGames() throws -> [Game] {
         reloadGamesCallCount += 1
+        return try reloadGamesStub.get()
     }
 }
