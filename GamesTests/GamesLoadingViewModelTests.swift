@@ -6,11 +6,17 @@ import XCTest
 
 final class GamesLoadingViewModel {
     
+    enum LoadingState {
+        case loading
+    }
+    
     private let loadGames: () -> Void
     
     init(loadGames: @escaping () -> Void) {
         self.loadGames = loadGames
     }
+    
+    let state: LoadingState = .loading
     
     func load() {
         loadGames()
@@ -28,6 +34,12 @@ final class GamesLoadingViewModelTests: XCTestCase {
         sut.load()
         
         XCTAssertEqual(loader.loadGamesCallCount, 1)
+    }
+    
+    func test_initialStateIsLoading() {
+        let sut = GamesLoadingViewModel(loadGames: { })
+        
+        XCTAssertEqual(sut.state, .error)
     }
 }
 
