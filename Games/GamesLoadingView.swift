@@ -4,23 +4,26 @@
 
 import SwiftUI
 
-struct GamesLoadingView: View {
-
+struct GamesLoadingView<GameView: View>: View {
+    
     enum LoadingState {
         case loading
         case loaded([Game])
         case error
     }
-    
+        
     private let loadGames: () async throws -> [Game]
     private let reloadGames: () async throws -> [Game]
+    private let makeGameView: (Game) -> GameView
 
     init(
         loadGames: @escaping () async throws -> [Game],
-        reloadGames: @escaping () async throws -> [Game]
+        reloadGames: @escaping () async throws -> [Game],
+        makeGameView: @escaping (Game) -> GameView
     ) {
         self.loadGames = loadGames
         self.reloadGames = reloadGames
+        self.makeGameView = makeGameView
     }
     
     @State private var state: LoadingState = .loading
@@ -44,11 +47,8 @@ struct GamesLoadingView: View {
     
     private func listView(for games: [Game]) -> some View {
         List(games, id: \.id) { game in
-            GameListItemView(
-                imageUrl: imageUrl(for: game.imageId),
-                name: game.name
-            )
-            .listRowSeparator(.hidden)
+            makeGameView(game)
+                .listRowSeparator(.hidden)
         }
         .refreshable(action: { await reload() })
     }
@@ -70,15 +70,5 @@ struct GamesLoadingView: View {
         } catch {
             state = .error
         }
-    }
-    
-    private func imageUrl(for imageId: String?) -> URL? {
-        guard
-            let imageId = imageId,
-            let imageUrl = URL(string: "https://images.igdb.com/igdb/image/upload/t_thumb_2x/\(imageId).jpg")
-        else {
-            return nil
-        }
-        return imageUrl
     }
 }
