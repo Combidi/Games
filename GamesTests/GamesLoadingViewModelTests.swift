@@ -15,9 +15,13 @@ final class GamesLoadingViewModel {
     }
     
     private let loadGames: () throws -> [Game]
-    
-    init(loadGames: @escaping () throws -> [Game]) {
+    private let reloadGames: () -> Void
+    init(
+        loadGames: @escaping () throws -> [Game],
+        reloadGames: @escaping () -> Void
+    ) {
         self.loadGames = loadGames
+        self.reloadGames = reloadGames
     }
     
     @Published private(set) var state: LoadingState = .loading
@@ -31,12 +35,19 @@ final class GamesLoadingViewModel {
             state = .error
         }
     }
+    
+    func reload() {
+        reloadGames()
+    }
 }
 
 final class GamesLoadingViewModelTests: XCTestCase {
     
     private let loader = LoaderSpy()
-    private lazy var sut = GamesLoadingViewModel(loadGames: loader.loadGames)
+    private lazy var sut = GamesLoadingViewModel(
+        loadGames: loader.loadGames,
+        reloadGames: loader.reloadGames
+    )
     
     func test_load_requestsGames() {
         XCTAssertEqual(loader.loadGamesCallCount, 0)
@@ -82,6 +93,13 @@ final class GamesLoadingViewModelTests: XCTestCase {
         )
     }
 
+    func test_reload_requestsGames() {
+        XCTAssertEqual(loader.reloadGamesCallCount, 0)
+
+        sut.reload()
+        
+        XCTAssertEqual(loader.reloadGamesCallCount, 1)
+    }
 }
 
 // MARK: Helpers
@@ -94,5 +112,11 @@ final private class LoaderSpy {
     func loadGames() throws -> [Game] {
         loadGamesCallCount += 1
         return try loadGamesStub.get()
+    }
+    
+    private(set) var reloadGamesCallCount = 0
+    
+    func reloadGames() {
+        reloadGamesCallCount += 1
     }
 }
