@@ -4,6 +4,7 @@
 
 import Foundation
 
+@MainActor
 final class GamesLoadingViewModel: ObservableObject {
     
     enum LoadingState: Equatable {
@@ -12,11 +13,12 @@ final class GamesLoadingViewModel: ObservableObject {
         case loaded([Game])
     }
     
-    private let loadGames: () throws -> [Game]
-    private let reloadGames: () throws -> [Game]
+    private let loadGames: () async throws -> [Game]
+    private let reloadGames: () async throws -> [Game]
+    
     init(
-        loadGames: @escaping () throws -> [Game],
-        reloadGames: @escaping () throws -> [Game]
+        loadGames: @escaping () async throws -> [Game],
+        reloadGames: @escaping () async throws -> [Game]
     ) {
         self.loadGames = loadGames
         self.reloadGames = reloadGames
@@ -24,14 +26,14 @@ final class GamesLoadingViewModel: ObservableObject {
     
     @Published private(set) var state: LoadingState = .loading
     
-    func load() {
+    func load() async {
         if state != .loading { state = .loading }
-        do { state = .loaded(try loadGames()) }
+        do { state = .loaded(try await loadGames()) }
         catch { state = .error }
     }
     
-    func reload() {
-        do { state = .loaded(try reloadGames()) }
+    func reload() async {
+        do { state = .loaded(try await reloadGames()) }
         catch { state = .error }
      }
 }

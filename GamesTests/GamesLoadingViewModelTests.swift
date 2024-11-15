@@ -6,6 +6,7 @@ import XCTest
 import Combine
 @testable import Games
 
+@MainActor
 final class GamesLoadingViewModelTests: XCTestCase {
     
     private let loader = LoaderSpy()
@@ -14,10 +15,10 @@ final class GamesLoadingViewModelTests: XCTestCase {
         reloadGames: loader.reloadGames
     )
     
-    func test_load_requestsGames() {
+    func test_load_requestsGames() async {
         XCTAssertEqual(loader.loadGamesCallCount, 0)
 
-        sut.load()
+        await sut.load()
         
         XCTAssertEqual(loader.loadGamesCallCount, 1)
     }
@@ -26,7 +27,7 @@ final class GamesLoadingViewModelTests: XCTestCase {
         XCTAssertEqual(sut.state, .loading)
     }
     
-    func test_states_duringLoadingGames() {
+    func test_states_duringLoadingGames() async {
         var cancellables: Set<AnyCancellable> = []
         var capturedStates: [GamesLoadingViewModel.LoadingState] = []
         sut.$state
@@ -40,7 +41,7 @@ final class GamesLoadingViewModelTests: XCTestCase {
         
         loader.loadGamesStub = .failure(NSError(domain: "any", code: 0))
         
-        sut.load()
+        await sut.load()
         
         XCTAssertEqual(
             capturedStates, [.loading, .error],
@@ -50,7 +51,7 @@ final class GamesLoadingViewModelTests: XCTestCase {
         let game = Game(id: 0, name: "Nice game", imageId: nil)
         loader.loadGamesStub = .success([game])
         
-        sut.load()
+        await sut.load()
 
         XCTAssertEqual(
             capturedStates, [.loading, .error, .loading, .loaded([game])],
@@ -58,16 +59,16 @@ final class GamesLoadingViewModelTests: XCTestCase {
         )
     }
 
-    func test_reload_requestsGames() {
+    func test_reload_requestsGames() async {
         XCTAssertEqual(loader.reloadGamesCallCount, 0)
 
-        sut.reload()
+        await sut.reload()
         
         XCTAssertEqual(loader.reloadGamesCallCount, 1)
     }
     
-    func test_states_duringReloadingGames() {
-        sut.load()
+    func test_states_duringReloadingGames() async {
+        await sut.load()
         
         var cancellables: Set<AnyCancellable> = []
         var capturedStates: [GamesLoadingViewModel.LoadingState] = []
@@ -79,7 +80,7 @@ final class GamesLoadingViewModelTests: XCTestCase {
         
         loader.reloadGamesStub = .failure(NSError(domain: "any", code: 0))
         
-        sut.reload()
+        await sut.reload()
         
         XCTAssertEqual(
             capturedStates, [.error],
@@ -89,7 +90,7 @@ final class GamesLoadingViewModelTests: XCTestCase {
         let game = Game(id: 0, name: "Nice game", imageId: nil)
         loader.reloadGamesStub = .success([game])
         
-        sut.reload()
+        await sut.reload()
 
         XCTAssertEqual(
             capturedStates, [.error, .loaded([game])],
