@@ -35,10 +35,10 @@ final class GamesLoadingViewModel {
 
 final class GamesLoadingViewModelTests: XCTestCase {
     
-    func test_load_requestsGames() {
-        let loader = LoaderSpy()
-        let sut = GamesLoadingViewModel(loadGames: loader.loadGames)
+    private let loader = LoaderSpy()
+    private lazy var sut = GamesLoadingViewModel(loadGames: loader.loadGames)
     
+    func test_load_requestsGames() {
         XCTAssertEqual(loader.loadGamesCallCount, 0)
 
         sut.load()
@@ -47,14 +47,10 @@ final class GamesLoadingViewModelTests: XCTestCase {
     }
     
     func test_initialStateIsLoading() {
-        let sut = GamesLoadingViewModel(loadGames: { [] })
-        
         XCTAssertEqual(sut.state, .loading)
     }
     
     func test_states_duringLoadingGames() {
-        let loader = LoaderSpy()
-        let sut = GamesLoadingViewModel(loadGames: loader.loadGames)
         var cancellables: Set<AnyCancellable> = []
         var capturedStates: [GamesLoadingViewModel.LoadingState] = []
         sut.$state
