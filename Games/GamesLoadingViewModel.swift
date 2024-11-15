@@ -4,7 +4,7 @@
 
 import Foundation
 
-final class GamesLoadingViewModel {
+final class GamesLoadingViewModel: ObservableObject {
     
     enum LoadingState: Equatable {
         case loading
