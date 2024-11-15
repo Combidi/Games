@@ -6,9 +6,14 @@ import SwiftUI
 
 struct GameListItemView: View {
     
-    let imageUrl: URL?
-    let name: String
+    private let imageUrl: URL?
+    private let name: String
         
+    init(imageUrl: URL?, name: String) {
+        self.imageUrl = imageUrl
+        self.name = name
+    }
+    
     var body: some View {
         HStack {
             if let imageUrl {
