@@ -39,7 +39,7 @@ final class GamesLoadingViewModelTests: XCTestCase {
     func test_initialStateIsLoading() {
         let sut = GamesLoadingViewModel(loadGames: { })
         
-        XCTAssertEqual(sut.state, .error)
+        XCTAssertEqual(sut.state, .loading)
     }
 }
 
