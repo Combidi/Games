@@ -5,42 +5,80 @@
 import SwiftUI
 
 struct GamesLoadingView: View {
-    
+
     enum LoadingState {
         case loading
         case loaded([Game])
         case error
     }
     
-    @State var state: LoadingState = .loading
+    private let loadGames: () async throws -> [Game]
+    private let reloadGames: () async throws -> [Game]
+
+    init(
+        loadGames: @escaping () async throws -> [Game],
+        reloadGames: @escaping () async throws -> [Game]
+    ) {
+        self.loadGames = loadGames
+        self.reloadGames = reloadGames
+    }
+    
+    @State private var state: LoadingState = .loading
     
     var body: some View {
-        switch state {
-        case .loading:
-            Text("Loading...")
-            
-        case .loaded(let games):
-            GameListView(games: games)
-            
-        case .error:
-            Text("Oeps, something went wrong.")
+        Group {
+            switch state {
+            case .loading:
+                Text("Loading...")
+                
+            case .loaded(let games):
+                listView(for: games)
 
+            case .error:
+                Text("Oeps, something went wrong.")
+                
+            }
+        }
+        .task { await load() }
+    }
+    
+    private func listView(for games: [Game]) -> some View {
+        List(games, id: \.id) { game in
+            GameListItemView(
+                imageUrl: imageUrl(for: game.imageId),
+                name: game.name
+            )
+            .listRowSeparator(.hidden)
+        }
+        .refreshable(action: { await reload() })
+    }
+    
+    private func load() async {
+        state = .loading
+        do {
+            let games = try await loadGames()
+            state = .loaded(games)
+        } catch {
+            state = .error
         }
     }
-}
-
-#Preview("Loading state") {
-    GamesLoadingView(state: .loading)
-}
-
-#Preview("Error state") {
-    GamesLoadingView(state: .error)
-}
-
-#Preview("Loaded state") {
-    GamesLoadingView(state: .loaded([
-        Game(id: 0, name: "Maji Kyun! Renaissance", imageId: "co5qi9"),
-        Game(id: 1, name: "Commando", imageId: nil),
-        Game(id: 2, name: "Commando", imageId: "co2k3z")
-    ]))
+    
+    private func reload() async {
+        do {
+            let games = try await reloadGames()
+            state = .loaded(games)
+        } catch {
+            state = .error
+        }
+    }
+    
+    private func imageUrl(for imageId: String?) -> URL? {
+        guard
+            let imageId = imageId,
+            let imageUrl = URL(string: "https://images.igdb.com/igdb/image/upload/t_thumb_2x/\(imageId).jpg")
+        else {
+            return nil
+        }
+        return imageUrl
+    }
 }
