@@ -12,7 +12,7 @@ private final class PaginatedGameListViewModel: ObservableObject {
     enum LoadingState: Equatable {
         case loading
         case error
-        case loaded([Game])
+        case loaded(PresentableGames)
     }
     
     private let loadGames: () async throws -> [Game]
@@ -30,16 +30,30 @@ private final class PaginatedGameListViewModel: ObservableObject {
     
     func load() async {
         if state != .loading { state = .loading }
-        do { state = .loaded(try await loadGames()) }
-        catch { state = .error }
+        do {
+            let games = try await loadGames()
+            let presentable = PresentableGames(games: games)
+            state = .loaded(presentable)
+        } catch {
+            state = .error
+        }
     }
     
     func reload() async {
-        do { state = .loaded(try await reloadGames()) }
-        catch { state = .error }
+        do {
+            let games = try await reloadGames()
+            let presentable = PresentableGames(games: games)
+            
+            state = .loaded(presentable)
+        } catch {
+            state = .error
+        }
      }
 }
 
+struct PresentableGames: Equatable {
+    let games: [Game]
+}
 
 @MainActor
 final class PaginatedGameListViewModelTests: XCTestCase {
@@ -88,8 +102,9 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         
         await sut.load()
 
+        let expectedPresentable = PresentableGames(games: [game])
         XCTAssertEqual(
-            capturedStates, [.loading, .error, .loading, .loaded([game])],
+            capturedStates, [.loading, .error, .loading, .loaded(expectedPresentable)],
             "Expected second loading state followed by presentation state after successful loading"
         )
     }
@@ -127,8 +142,9 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         
         await sut.reload()
 
+        let expectedPresentable = PresentableGames(games: [game])
         XCTAssertEqual(
-            capturedStates, [.error, .loaded([game])],
+            capturedStates, [.error, .loaded(expectedPresentable)],
             "Expected second loading state followed by presentation state after successful loading"
         )
     }
