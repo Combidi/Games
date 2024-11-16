@@ -50,7 +50,6 @@ private final class PaginatedGameListViewModel: ObservableObject {
         guard let loadMore = current.loadMore else { return nil }
         return {
             do {
-                self.state = .loading
                 let nextPage = try await loadMore()
                 let presentable = PresentableGames(
                     games: nextPage.games,
@@ -128,14 +127,27 @@ final class PaginatedGameListViewModelTests: XCTestCase {
             "Expected error state on loading failure"
         )
 
-        let game = Game(id: 0, name: "Nice game", imageId: nil)
-        loader.loadGamesStub = .success([game])
+        let firstGame = Game(id: 0, name: "Nice game", imageId: nil)
+        let secondGame = Game(id: 1, name: "Another game", imageId: nil)
+        loader.loadGamesStub = .success([firstGame])
+        loader.loadMoreGamesStub = [.success([secondGame])]
         
         await sut.load()
 
-        let expectedPresentable = PresentableGames(games: [game], loadMore: nil)
+        let firstExpectedPresentable = PresentableGames(games: [firstGame], loadMore: nil)
         XCTAssertEqual(
-            capturedStates, [.loading, .error, .loading, .loaded(expectedPresentable)],
+            capturedStates, [.loading, .error, .loading, .loaded(firstExpectedPresentable)],
+            "Expected second loading state followed by presentation state after successful loading"
+        )
+        
+        guard case let .loaded(firstPage) = sut.state else {
+            return XCTFail()
+        }
+
+        await firstPage.loadMore!()
+        let secondExpectedPresentable = PresentableGames(games: [firstGame, secondGame], loadMore: nil)
+        XCTAssertEqual(
+            capturedStates, [.loading, .error, .loading, .loaded(firstExpectedPresentable), .loaded(secondExpectedPresentable)],
             "Expected second loading state followed by presentation state after successful loading"
         )
     }
