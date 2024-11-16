@@ -6,6 +6,10 @@ import XCTest
 import Combine
 @testable import Games
 
+struct PaginatedGames {
+    let games: [Game]
+}
+
 @MainActor
 private final class PaginatedGameListViewModel: ObservableObject {
     
@@ -15,12 +19,12 @@ private final class PaginatedGameListViewModel: ObservableObject {
         case loaded(PresentableGames)
     }
     
-    private let loadGames: () async throws -> [Game]
-    private let reloadGames: () async throws -> [Game]
+    private let loadGames: () async throws -> PaginatedGames
+    private let reloadGames: () async throws -> PaginatedGames
     
     init(
-        loadGames: @escaping () async throws -> [Game],
-        reloadGames: @escaping () async throws -> [Game]
+        loadGames: @escaping () async throws -> PaginatedGames,
+        reloadGames: @escaping () async throws -> PaginatedGames
     ) {
         self.loadGames = loadGames
         self.reloadGames = reloadGames
@@ -31,7 +35,8 @@ private final class PaginatedGameListViewModel: ObservableObject {
     func load() async {
         if state != .loading { state = .loading }
         do {
-            let games = try await loadGames()
+            let page = try await loadGames()
+            let games = page.games
             let presentable = PresentableGames(games: games)
             state = .loaded(presentable)
         } catch {
@@ -41,7 +46,8 @@ private final class PaginatedGameListViewModel: ObservableObject {
     
     func reload() async {
         do {
-            let games = try await reloadGames()
+            let page = try await reloadGames()
+            let games = page.games
             let presentable = PresentableGames(games: games)
             
             state = .loaded(presentable)
@@ -157,17 +163,17 @@ final private class LoaderSpy {
     
     var loadGamesStub: Result<[Game], Error> = .success([])
     
-    func loadGames() throws -> [Game] {
+    func loadGames() throws -> PaginatedGames {
         loadGamesCallCount += 1
-        return try loadGamesStub.get()
+        return PaginatedGames(games: try loadGamesStub.get())
     }
     
     private(set) var reloadGamesCallCount = 0
     
     var reloadGamesStub: Result<[Game], Error> = .success([])
     
-    func reloadGames() throws -> [Game] {
+    func reloadGames() throws -> PaginatedGames {
         reloadGamesCallCount += 1
-        return try reloadGamesStub.get()
+        return PaginatedGames(games: try reloadGamesStub.get())
     }
 }
