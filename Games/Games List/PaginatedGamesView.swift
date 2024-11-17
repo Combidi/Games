@@ -46,7 +46,7 @@ struct PaginatedGamesView<GameView: View>: View {
     }
 }
 
-struct LoadMoreView: View {
+private struct LoadMoreView: View {
     
     let loadMore: () async throws -> Void
     
