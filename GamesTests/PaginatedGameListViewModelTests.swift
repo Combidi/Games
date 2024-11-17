@@ -119,7 +119,11 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         await sut.load()
         
         XCTAssertEqual(
-            capturedStates, [.loading, .error],
+            capturedStates,
+            [
+                .loading,
+                .error
+            ],
             "Expected error state on loading failure"
         )
 
@@ -130,86 +134,85 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         
         await sut.load()
 
-        let firstExpectedPresentable = PresentableGames(games: [firstGame], loadMore: nil)
         XCTAssertEqual(
-            capturedStates, [.loading, .error, .loading, .loaded(firstExpectedPresentable)],
-            "Expected second loading state followed by presentation state after successful loading"
+            capturedStates,
+            [
+                .loading,
+                .error,
+                .loading,
+                .loaded(PresentableGames(games: [firstGame], loadMore: nil))
+            ],
+            "Expected second .loading state followed by .loaded state after successful loading"
         )
         
-        guard case let .loaded(firstPage) = sut.state else {
-            return XCTFail()
-        }
+        try await presentedPage(sut)?.loadMore?()
 
-        try await firstPage.loadMore!()
-        let secondExpectedPresentable = PresentableGames(games: [firstGame, secondGame], loadMore: nil)
         XCTAssertEqual(
-            capturedStates, [.loading, .error, .loading, .loaded(firstExpectedPresentable), .loaded(secondExpectedPresentable)],
-            "Expected second loading state followed by presentation state after successful loading"
+            capturedStates,
+            [
+                .loading,
+                .error,
+                .loading,
+                .loaded(PresentableGames(games: [firstGame], loadMore: nil)),
+                .loaded(PresentableGames(games: [firstGame, secondGame], loadMore: nil))
+            ],
+            "Expected second .loaded state without .loading state after successfully loading more"
         )
     }
 
-    func test_loadMore_loadsModeUntilEvetythingIsLoaded() async {
+    func test_loadMore_loadsModeUntilEverythingIsLoaded() async throws {
         
         loader.loadGamesStub = .success([
             Game(id: 0, name: "game 0", imageId: "0"),
             Game(id: 1, name: "game 1", imageId: "1")
         ])
-        
         loader.loadMoreGamesStub = [
+            .failure(NSError(domain: "any", code: 0)),
             .success([
                 Game(id: 2, name: "game 2", imageId: "2"),
                 Game(id: 3, name: "game 3", imageId: "3")
-            ]),
-            .failure(NSError(domain: "any", code: 0)),
-            .success([
-                Game(id: 4, name: "game 4", imageId: "4"),
-                Game(id: 5, name: "game 5", imageId: "5"),
-                Game(id: 6, name: "game 6", imageId: "6")
             ])
         ]
         
         await sut.load()
         
-        guard case let .loaded(firstPage) = sut.state else {
-            return XCTFail()
-        }
+        XCTAssertEqual(
+            presentedGames(sut),
+            [
+                Game(id: 0, name: "game 0", imageId: "0"),
+                Game(id: 1, name: "game 1", imageId: "1")
+            ],
+            "Expected to loaded games to be presented"
+        )
         
-        XCTAssertEqual(firstPage.games, [
-            Game(id: 0, name: "game 0", imageId: "0"),
-            Game(id: 1, name: "game 1", imageId: "1")
-        ])
+        try? await presentedPage(sut)?.loadMore?()
         
-        try? await firstPage.loadMore?()
+        XCTAssertEqual(
+            presentedGames(sut),
+            [
+                Game(id: 0, name: "game 0", imageId: "0"),
+                Game(id: 1, name: "game 1", imageId: "1"),
+            ],
+            "Expected presentation state not to be altered after load more failure"
+        )
         
-        guard case let .loaded(secondPage) = sut.state else {
-            return XCTFail()
-        }
+        try await presentedPage(sut)?.loadMore?()
         
-        XCTAssertEqual(secondPage.games, [
-            Game(id: 0, name: "game 0", imageId: "0"),
-            Game(id: 1, name: "game 1", imageId: "1"),
-            Game(id: 2, name: "game 2", imageId: "2"),
-            Game(id: 3, name: "game 3", imageId: "3")
-        ])
-        
-        try? await secondPage.loadMore?()
-        try? await secondPage.loadMore?() // This one is the failure....
-        
-        guard case let .loaded(thirdPage) = sut.state else {
-            return XCTFail()
-        }
-        
-        XCTAssertEqual(thirdPage.games, [
-            Game(id: 0, name: "game 0", imageId: "0"),
-            Game(id: 1, name: "game 1", imageId: "1"),
-            Game(id: 2, name: "game 2", imageId: "2"),
-            Game(id: 3, name: "game 3", imageId: "3"),
-            Game(id: 4, name: "game 4", imageId: "4"),
-            Game(id: 5, name: "game 5", imageId: "5"),
-            Game(id: 6, name: "game 6", imageId: "6")
-        ])
-        
-        XCTAssertNil(thirdPage.loadMore)
+        XCTAssertEqual(
+            presentedGames(sut),
+            [
+                Game(id: 0, name: "game 0", imageId: "0"),
+                Game(id: 1, name: "game 1", imageId: "1"),
+                Game(id: 2, name: "game 2", imageId: "2"),
+                Game(id: 3, name: "game 3", imageId: "3")
+            ],
+            "Expected to present all games after successfull load more"
+        )
+                
+        XCTAssertNil(
+            presentedPage(sut)?.loadMore,
+            "Expected load more to be nil when there are no more pages to load"
+        )
     }
     
     func test_reload_requestsGames() async {
@@ -251,7 +254,21 @@ final class PaginatedGameListViewModelTests: XCTestCase {
             "Expected second loading state followed by presentation state after successful loading"
         )
     }
+
+    // MARK: Helpers
+    
+    private func presentedGames(_ sut: PaginatedGameListViewModel) -> [Game]? {
+        presentedPage(sut)?.games
+    }
+    
+    private func presentedPage(_ sut: PaginatedGameListViewModel) -> PresentableGames? {
+        guard case let .loaded(page) = sut.state else {
+            return nil
+        }
+        return page
+    }
 }
+
 
 // MARK: Helpers
 
