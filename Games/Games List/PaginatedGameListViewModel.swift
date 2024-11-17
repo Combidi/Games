@@ -4,11 +4,6 @@
 
 import Foundation
 
-struct PaginatedGames {
-    let games: [Game]
-    let loadMore: (() async throws -> PaginatedGames)?
-}
-
 @MainActor
 final class PaginatedGameListViewModel: ObservableObject {
     
