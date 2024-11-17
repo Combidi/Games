@@ -46,19 +46,15 @@ private final class PaginatedGameListViewModel: ObservableObject {
         catch { state = .error }
     }
     
-    private func loadNextPage(current: PaginatedGames) -> (() async -> Void)? {
+    private func loadNextPage(current: PaginatedGames) -> (() async throws -> Void)? {
         guard let loadMore = current.loadMore else { return nil }
         return {
-            do {
-                let nextPage = try await loadMore()
-                let presentable = PresentableGames(
-                    games: nextPage.games,
-                    loadMore: self.loadNextPage(current: nextPage)
-                )
-                self.state = .loaded(presentable)
-            } catch {
-                self.state = .error
-            }
+            let nextPage = try await loadMore()
+            let presentable = PresentableGames(
+                games: nextPage.games,
+                loadMore: self.loadNextPage(current: nextPage)
+            )
+            self.state = .loaded(presentable)
         }
     }
     
@@ -78,7 +74,7 @@ private final class PaginatedGameListViewModel: ObservableObject {
 struct PresentableGames: Equatable {
     
     let games: [Game]
-    let loadMore: (() async -> Void)?
+    let loadMore: (() async throws -> Void)?
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         rhs.games == lhs.games
@@ -106,7 +102,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(sut.state, .loading)
     }
     
-    func test_states_duringLoadingGames() async {
+    func test_states_duringLoadingGames() async throws {
         var cancellables: Set<AnyCancellable> = []
         var capturedStates: [PaginatedGameListViewModel.LoadingState] = []
         sut.$state
@@ -144,7 +140,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
             return XCTFail()
         }
 
-        await firstPage.loadMore!()
+        try await firstPage.loadMore!()
         let secondExpectedPresentable = PresentableGames(games: [firstGame, secondGame], loadMore: nil)
         XCTAssertEqual(
             capturedStates, [.loading, .error, .loading, .loaded(firstExpectedPresentable), .loaded(secondExpectedPresentable)],
@@ -164,6 +160,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
                 Game(id: 2, name: "game 2", imageId: "2"),
                 Game(id: 3, name: "game 3", imageId: "3")
             ]),
+            .failure(NSError(domain: "any", code: 0)),
             .success([
                 Game(id: 4, name: "game 4", imageId: "4"),
                 Game(id: 5, name: "game 5", imageId: "5"),
@@ -182,7 +179,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
             Game(id: 1, name: "game 1", imageId: "1")
         ])
         
-        await firstPage.loadMore?()
+        try? await firstPage.loadMore?()
         
         guard case let .loaded(secondPage) = sut.state else {
             return XCTFail()
@@ -195,12 +192,13 @@ final class PaginatedGameListViewModelTests: XCTestCase {
             Game(id: 3, name: "game 3", imageId: "3")
         ])
         
-        await secondPage.loadMore?()
-    
+        try? await secondPage.loadMore?()
+        try? await secondPage.loadMore?() // This one is the failure....
+        
         guard case let .loaded(thirdPage) = sut.state else {
             return XCTFail()
         }
-
+        
         XCTAssertEqual(thirdPage.games, [
             Game(id: 0, name: "game 0", imageId: "0"),
             Game(id: 1, name: "game 1", imageId: "1"),
@@ -288,8 +286,8 @@ final private class LoaderSpy {
 
     private func makeLoadMore(currentGames: [Game]) -> (() async throws -> PaginatedGames)? {
         if loadMoreGamesStub.isEmpty { return nil }
-        let nextStub = loadMoreGamesStub.removeFirst()
         return {
+            let nextStub = self.loadMoreGamesStub.removeFirst()
             let games = try currentGames + nextStub.get()
             return PaginatedGames(games: games, loadMore: self.makeLoadMore(currentGames: games))
         }
