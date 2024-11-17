@@ -22,11 +22,11 @@ struct RemoteGamesProvider {
         self.client = client
     }
         
-    func getGames() async throws -> [Game] {
+    func getGames(limit: Int, offset: Int) async throws -> [Game] {
         let url = URL(string: "https://api.igdb.com/v4/games")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.httpBody = Data("f name, cover.image_id;".utf8)
+        request.httpBody = Data("f name, cover.image_id; l \(limit); o \(offset);".utf8)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         let (data, _) = try await client.perform(request)
         let decodableGames = try JSONDecoder().decode([DecodableGame].self, from: data)

@@ -11,21 +11,23 @@ final class RemoteGamesProviderTests: XCTestCase {
     private lazy var sut = RemoteGamesProvider(client: client)
     
     func test_getGames_performsPostRequest() async throws {
-        _ = try? await sut.getGames()
+        let limit = 10
+        let offset = 30
+        _ = try? await sut.getGames(limit: limit, offset: offset)
         
         let request = try XCTUnwrap(client.capturedRequest)
         
         XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(request.url, URL(string: "https://api.igdb.com/v4/games")!)
         XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "application/json")
-        XCTAssertEqual(request.httpBody.map { String(data: $0, encoding: .utf8) }, "f name, cover.image_id;")
+        XCTAssertEqual(request.httpBody.map { String(data: $0, encoding: .utf8) }, "f name, cover.image_id; l 10; o 30;")
     }
     
     func test_getGames_deliversErrorOnClientError() async {
         client.stub = .failure(NSError(domain: "any", code: 0))
         
         do {
-            let result = try await sut.getGames()
+            let result = try await sut.getGames(limit: 10, offset: 0)
             XCTFail("Expected error, got \(result) instead")
         } catch {}
     }
@@ -57,7 +59,7 @@ final class RemoteGamesProviderTests: XCTestCase {
         """
         client.stub = .success(Data(gamesJson.utf8))
                 
-        let games = try await sut.getGames()
+        let games = try await sut.getGames(limit: 10, offset: 0)
         
         let expectedGames = [
             Game(id: 131913, name: "Maji Kyun! Renaissance", imageId: "co5qi9"),
@@ -88,7 +90,7 @@ final class RemoteGamesProviderTests: XCTestCase {
         client.stub = .success(Data(gamesJson.utf8))
         
         do {
-            let result = try await sut.getGames()
+            let result = try await sut.getGames(limit: 10, offset: 0)
             XCTFail("Expected error, got \(result) instead")
         } catch {}
     }
