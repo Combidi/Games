@@ -35,8 +35,16 @@ private final class PaginatedGameListViewModel: ObservableObject {
     
     func load() async {
         if state != .loading { state = .loading }
+        await load(using: loadGames)
+    }
+    
+    func reload() async {
+        await load(using: reloadGames)
+    }
+    
+    private func load(using loadAction: () async throws -> PaginatedGames) async {
         do {
-            let page = try await loadGames()
+            let page = try await loadAction()
             let presentable = PresentableGames(
                 games: page.games,
                 loadMore: loadNextPage(current: page)
@@ -50,29 +58,15 @@ private final class PaginatedGameListViewModel: ObservableObject {
     
     private func loadNextPage(current: PaginatedGames) -> (() async throws -> Void)? {
         guard let loadMore = current.loadMore else { return nil }
-        return {
+        return { [self] in
             let nextPage = try await loadMore()
             let presentable = PresentableGames(
                 games: nextPage.games,
-                loadMore: self.loadNextPage(current: nextPage)
-            )
-            self.state = .loaded(presentable)
-        }
-    }
-    
-    func reload() async {
-        do {
-            let page = try await reloadGames()
-            let presentable = PresentableGames(
-                games: page.games,
-                loadMore: loadNextPage(current: page)
+                loadMore: loadNextPage(current: nextPage)
             )
             state = .loaded(presentable)
         }
-        catch {
-            state = .error
-        }
-     }
+    }
 }
 
 struct PresentableGames: Equatable {
