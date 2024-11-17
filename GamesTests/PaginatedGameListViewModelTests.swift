@@ -43,7 +43,9 @@ private final class PaginatedGameListViewModel: ObservableObject {
             )
             state = .loaded(presentable)
         }
-        catch { state = .error }
+        catch {
+            state = .error
+        }
     }
     
     private func loadNextPage(current: PaginatedGames) -> (() async throws -> Void)? {
@@ -61,11 +63,13 @@ private final class PaginatedGameListViewModel: ObservableObject {
     func reload() async {
         do {
             let page = try await reloadGames()
-            let games = page.games
-            let presentable = PresentableGames(games: games, loadMore: nil)
-            
+            let presentable = PresentableGames(
+                games: page.games,
+                loadMore: loadNextPage(current: page)
+            )
             state = .loaded(presentable)
-        } catch {
+        }
+        catch {
             state = .error
         }
      }
@@ -255,6 +259,62 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         )
     }
 
+    func test_reload_loadMore_loadsMoreUntilEverythingIsLoaded() async throws {
+        
+        loader.reloadGamesStub = .success([
+            Game(id: 0, name: "game 0", imageId: "0"),
+            Game(id: 1, name: "game 1", imageId: "1")
+        ])
+        loader.loadMoreGamesStub = [
+            .failure(NSError(domain: "any", code: 0)),
+            .success([
+                Game(id: 2, name: "game 2", imageId: "2"),
+                Game(id: 3, name: "game 3", imageId: "3")
+            ])
+        ]
+        
+        await sut.reload()
+        
+        XCTAssertEqual(
+            presentedGames(sut),
+            [
+                Game(id: 0, name: "game 0", imageId: "0"),
+                Game(id: 1, name: "game 1", imageId: "1")
+            ],
+            "Expected to loaded games to be presented"
+        )
+        
+        try? await presentedPage(sut)?.loadMore?()
+        
+        XCTAssertEqual(
+            presentedGames(sut),
+            [
+                Game(id: 0, name: "game 0", imageId: "0"),
+                Game(id: 1, name: "game 1", imageId: "1"),
+            ],
+            "Expected presentation state not to be altered after load more failure"
+        )
+        
+        try await presentedPage(sut)?.loadMore?()
+        
+        XCTAssertEqual(
+            presentedGames(sut),
+            [
+                Game(id: 0, name: "game 0", imageId: "0"),
+                Game(id: 1, name: "game 1", imageId: "1"),
+                Game(id: 2, name: "game 2", imageId: "2"),
+                Game(id: 3, name: "game 3", imageId: "3")
+            ],
+            "Expected to present all games after successfull load more"
+        )
+                
+        XCTAssertNil(
+            presentedPage(sut)?.loadMore,
+            "Expected load more to be nil when there are no more pages to load"
+        )
+    }
+
+    
     // MARK: Helpers
     
     private func presentedGames(_ sut: PaginatedGameListViewModel) -> [Game]? {
