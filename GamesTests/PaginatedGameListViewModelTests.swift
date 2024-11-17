@@ -160,7 +160,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         )
     }
 
-    func test_loadMore_loadsModeUntilEverythingIsLoaded() async throws {
+    func test_loadMore_loadsMoreUntilEverythingIsLoaded() async throws {
         
         loader.loadGamesStub = .success([
             Game(id: 0, name: "game 0", imageId: "0"),
