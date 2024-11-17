@@ -61,13 +61,3 @@ final class PaginatedGameListViewModel: ObservableObject {
         }
     }
 }
-
-struct PresentableGames: Equatable {
-    
-    let games: [Game]
-    let loadMore: (() async throws -> Void)?
-
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        rhs.games == lhs.games
-    }
-}
