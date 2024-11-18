@@ -10,7 +10,7 @@ import Combine
 final class PaginatedGameListViewModelTests: XCTestCase {
     
     private let loader = LoaderSpy()
-    private lazy var sut = PaginatedGameListViewModel(
+    private lazy var sut = PaginatedListViewModel(
         loadGames: loader.loadGames,
         reloadGames: loader.reloadGames
     )
@@ -29,7 +29,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
     
     func test_states_duringLoadingGames() async throws {
         var cancellables: Set<AnyCancellable> = []
-        var capturedStates: [PaginatedGameListViewModel.LoadingState] = []
+        var capturedStates: [PaginatedListViewModel.LoadingState] = []
         sut.$state
             .sink { capturedStates.append($0) }
             .store(in: &cancellables)
@@ -152,7 +152,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         await sut.load()
         
         var cancellables: Set<AnyCancellable> = []
-        var capturedStates: [PaginatedGameListViewModel.LoadingState] = []
+        var capturedStates: [PaginatedListViewModel.LoadingState] = []
         sut.$state
             .dropFirst()
             .sink { capturedStates.append($0) }
@@ -238,11 +238,11 @@ final class PaginatedGameListViewModelTests: XCTestCase {
     
     // MARK: Helpers
     
-    private func presentedGames(_ sut: PaginatedGameListViewModel) -> [Game]? {
+    private func presentedGames(_ sut: PaginatedListViewModel) -> [Game]? {
         presentedPage(sut)?.games
     }
     
-    private func presentedPage(_ sut: PaginatedGameListViewModel) -> PresentableGames? {
+    private func presentedPage(_ sut: PaginatedListViewModel) -> PresentableGames? {
         guard case let .loaded(page) = sut.state else {
             return nil
         }

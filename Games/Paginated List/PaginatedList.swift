@@ -4,17 +4,19 @@
 
 import SwiftUI
 
-struct PaginatedGamesView<GameView: View>: View {
-            
-    @ObservedObject private var viewModel: PaginatedGameListViewModel
-    private let makeGameView: (Game) -> GameView
+struct PaginatedList<ListItemView: View, ListItem: Equatable & Identifiable>: View {
+    
+    typealias ViewModel = PaginatedListViewModel<ListItem>
+    
+    @ObservedObject private var viewModel: ViewModel
+    private let makeListItemView: (ListItem) -> ListItemView
 
     init(
-        viewModel: PaginatedGameListViewModel,
-        makeGameView: @escaping (Game) -> GameView
+        viewModel: ViewModel,
+        makeListItemView: @escaping (ListItem) -> ListItemView
     ) {
         self.viewModel = viewModel
-        self.makeGameView = makeGameView
+        self.makeListItemView = makeListItemView
     }
         
     var body: some View {
@@ -38,13 +40,13 @@ struct PaginatedGamesView<GameView: View>: View {
         .task { await viewModel.load() }
     }
     
-    private func listView(for games: PresentableGames) -> some View {
+    private func listView(for presentable: ViewModel.Presentable) -> some View {
         List {
-            ForEach(games.games, id: \.id) { game in
-                makeGameView(game)
+            ForEach(presentable.items) { listItem in
+                makeListItemView(listItem)
                     .listRowSeparator(.hidden)
             }
-            loadMoreView(loadMore: games.loadMore)
+            loadMoreView(loadMore: presentable.loadMore)
         }
         .refreshable(action: { await viewModel.reload() })
     }
