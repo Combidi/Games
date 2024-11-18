@@ -17,8 +17,9 @@ private struct RemotePaginatedGamesProvider {
         self.remoteGamesProvider = remoteGamesProvider
     }
     
-    func getGames() async throws {
-        try await _ = remoteGamesProvider.getGames(limit: 10, offset: 0)
+    func getGames() async throws -> PaginatedGames {
+        let games = try await remoteGamesProvider.getGames(limit: 10, offset: 0)
+        return PaginatedGames(games: games, loadMore: nil)
     }
 }
 
@@ -32,6 +33,17 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         
         XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 0)])
     }
+
+    func test_getGames_deliversGamesReceivedFromRemoteLoader() async throws {
+        let remoteGamesProvider = RemoteGamesProviderSpy()
+        let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
+        let game = Game(id: 0, name: "first", imageId: nil)
+        remoteGamesProvider.stub = .success([game])
+ 
+        let result = try await sut.getGames()
+        
+        XCTAssertEqual(result.games, [game])
+    }
 }
 
 private final class RemoteGamesProviderSpy: RemoteGamesProvider {
@@ -41,10 +53,12 @@ private final class RemoteGamesProviderSpy: RemoteGamesProvider {
         let offset: Int
     }
     
+    var stub: Result<[Game], Error> = .success([])
+    
     private(set) var capturedMessages: [Message] = []
     
     func getGames(limit: Int, offset: Int) async throws -> [Game] {
         capturedMessages.append(Message(limit: limit, offset: offset))
-        return []
+        return try stub.get()
     }
 }
