@@ -29,21 +29,18 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
         
-        try await sut.getGames()
+        _ = try await sut.getGames()
         
         XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 0)])
     }
-
     func test_getGames_deliversGamesReceivedFromRemoteLoader() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
         let game = Game(id: 0, name: "first", imageId: nil)
         remoteGamesProvider.stub = .success([game])
- 
         let result = try await sut.getGames()
         
         XCTAssertEqual(result.games, [game])
-    }
 }
 
 private final class RemoteGamesProviderSpy: RemoteGamesProvider {
