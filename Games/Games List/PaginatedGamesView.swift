@@ -40,8 +40,18 @@ struct PaginatedGamesView<GameView: View>: View {
                 makeGameView(game)
                     .listRowSeparator(.hidden)
             }
-            games.loadMore.map(LoadMoreView.init)
+            loadMoreView(loadMore: games.loadMore)
         }
         .refreshable(action: { await viewModel.reload() })
+    }
+    
+    private func loadMoreView(loadMore: (() async throws -> Void)?) -> some View {
+        loadMore.map { loadMore in
+            HStack {
+                Spacer()
+                LoadMoreView(loadMore: loadMore)
+                Spacer()
+            }
+        }
     }
 }

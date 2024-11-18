@@ -18,8 +18,11 @@ struct LoadMoreView: View {
     var body: some View {
         switch state {
         case .loading:
-            Text("Loading more...")
-                .onAppear { load() }
+            HStack {
+                Spinner()
+                Text("Loading more...")
+            }
+            .onAppear { load() }
         case .error:
             Button(action: load) {
                 Text("Retry")
@@ -35,4 +38,30 @@ struct LoadMoreView: View {
             }
         }
     }
+}
+
+private struct Spinner: View {
+    
+    @State private var degrees = 0.0
+
+    var body: some View {
+        Image(systemName: "gauge.with.needle")
+            .resizable()
+            .frame(width: 30, height: 30)
+            .rotationEffect(.degrees(degrees))
+            .onAppear {
+                withAnimation(.linear(duration: 1)
+                    .repeatForever(autoreverses: false)) {
+                        degrees = 360.0
+                    }
+            }
+    }
+}
+
+#Preview {
+    LoadMoreView { try? await Task.sleep(nanoseconds: UInt64.max) }
+}
+
+#Preview {
+    LoadMoreView { throw NSError(domain: "any", code: 0) }
 }
