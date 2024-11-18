@@ -27,8 +27,12 @@ struct PaginatedGamesView<GameView: View>: View {
                 listView(for: presentable)
 
             case .error:
-                Text("Oeps, something went wrong.")
-                
+                VStack {
+                    Text("Oeps, something went wrong.")
+                    Button(action: { Task { await viewModel.load() } }) {
+                        Text("Try again")
+                    }
+                }
             }
         }
         .task { await viewModel.load() }
