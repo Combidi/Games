@@ -24,7 +24,7 @@ private struct RemotePaginatedGamesProvider {
 
 final class RemotePaginatedGamesProviderTests: XCTestCase {
     
-    func test_getGames_loadsFirstPage() async throws {
+    func test_getGames_loadsFirstPageFromRemoteLoader() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
         
