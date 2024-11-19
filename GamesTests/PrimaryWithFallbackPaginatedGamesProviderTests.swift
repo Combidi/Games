@@ -5,7 +5,7 @@
 import XCTest
 @testable import Games
 
-private struct PrimaryWithFallbackGamesProvider {
+private struct PrimaryWithFallbackGamesProvider: PaginatedGamesProvider {
     
     private let primaryProvider: PaginatedGamesProviderStub
     private let fallbackProvider: PaginatedGamesProviderStub
