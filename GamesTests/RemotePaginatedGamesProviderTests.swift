@@ -48,6 +48,20 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 0)])
     }
 
+    func test_getGames_deliversErrorOnRemoteLoaderError() async throws {
+        let remoteGamesProvider = RemoteGamesProviderSpy()
+        let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
+        let remoteLoaderError = NSError(domain: "any", code: 1)
+        remoteGamesProvider.stub = .failure(remoteLoaderError)
+        
+        do {
+            let result = try await sut.getGames()
+            XCTFail("Expected getGames to throw, got \(result) instead")
+        } catch {
+            XCTAssertEqual(error as NSError, remoteLoaderError)
+        }
+    }
+    
     func test_getGames_deliversGamesReceivedFromRemoteLoader() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
