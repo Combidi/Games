@@ -26,17 +26,19 @@ private struct PrimaryWithFallbackGamesProvider {
 
 final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
     
+    private let primaryProvider = PaginatedGamesProviderStub()
+    private let fallbackProvider = PaginatedGamesProviderStub()
+    private lazy var sut = PrimaryWithFallbackGamesProvider(
+        primaryProvider: primaryProvider,
+        fallbackProvider: fallbackProvider
+    )
+
     func test_getGames_deliversGamesFromPrimaryProvider() throws {
-        let primaryProvider = PaginatedGamesProviderStub()
         let games = [
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
         ]
         primaryProvider.stub = .success(games)
-        let sut = PrimaryWithFallbackGamesProvider(
-            primaryProvider: primaryProvider,
-            fallbackProvider: PaginatedGamesProviderStub()
-        )
 
         let result = try sut.getGames()
 
@@ -44,18 +46,12 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
     }
     
     func test_getGames_deliversGamesFromFallbackProviderOnPrimaryProviderError() throws {
-        let primaryProvider = PaginatedGamesProviderStub()
         primaryProvider.stub = .failure(NSError(domain: "any", code: 0))
-        let fallbackProvider = PaginatedGamesProviderStub()
         let games = [
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
         ]
         fallbackProvider.stub = .success(games)
-        let sut = PrimaryWithFallbackGamesProvider(
-            primaryProvider: primaryProvider,
-            fallbackProvider: fallbackProvider
-        )
 
         let result = try sut.getGames()
 
@@ -63,17 +59,10 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
     }
 
     func test_getGames_deliversErrorOnFallbackProviderError() throws {
-        let primaryProvider = PaginatedGamesProviderStub()
         primaryProvider.stub = .failure(NSError(domain: "any", code: 0))
         
         let fallbackProviderError = NSError(domain: "any", code: 1)
-        let fallbackProvider = PaginatedGamesProviderStub()
         fallbackProvider.stub = .failure(fallbackProviderError)
-
-        let sut = PrimaryWithFallbackGamesProvider(
-            primaryProvider: primaryProvider,
-            fallbackProvider: fallbackProvider
-        )
 
         do {
             let result = try sut.getGames()
