@@ -5,25 +5,6 @@
 import XCTest
 @testable import Games
 
-private struct PrimaryWithFallbackGamesProvider: PaginatedGamesProvider {
-    
-    private let primaryProvider: PaginatedGamesProvider
-    private let fallbackProvider: PaginatedGamesProvider
-    
-    init(
-        primaryProvider: PaginatedGamesProvider,
-        fallbackProvider: PaginatedGamesProvider
-    ) {
-        self.primaryProvider = primaryProvider
-        self.fallbackProvider = fallbackProvider
-    }
-    
-    func getGames() async throws -> PaginatedGames {
-        do { return try await primaryProvider.getGames() }
-        catch { return try await fallbackProvider.getGames() }
-    }
-}
-
 final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
     
     private let primaryProvider = PaginatedGamesProviderStub()
