@@ -11,14 +11,19 @@ private protocol RemoteGamesProvider {
 
 private struct RemotePaginatedGamesProvider {
         
+    private let startOffset: Int
     private let remoteGamesProvider: RemoteGamesProvider
     
-    init(remoteGamesProvider: RemoteGamesProvider) {
+    init(
+        startOffset: Int = 0,
+        remoteGamesProvider: RemoteGamesProvider
+    ) {
+        self.startOffset = startOffset
         self.remoteGamesProvider = remoteGamesProvider
     }
     
     func getGames() async throws -> PaginatedGames {
-        let games = try await remoteGamesProvider.getGames(limit: 10, offset: 0)
+        let games = try await remoteGamesProvider.getGames(limit: 10, offset: startOffset)
         return PaginatedGames(games: games, loadMore: makeRemoteLoadMoreLoader(currentGames: games))
     }
     
@@ -50,6 +55,18 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 0)])
     }
 
+    func test_getGames_withStartOffset_requestsGamesStartingFromGivenOffset() async throws {
+        let remoteGamesProvider = RemoteGamesProviderSpy()
+        let sut = RemotePaginatedGamesProvider(
+            startOffset: 30,
+            remoteGamesProvider: remoteGamesProvider
+        )
+        
+        _ = try await sut.getGames()
+        
+        XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 30)])
+    }
+    
     func test_getGames_deliversErrorOnRemoteLoaderError() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
