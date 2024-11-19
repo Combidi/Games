@@ -24,13 +24,15 @@ private struct RemotePaginatedGamesProvider {
     
     private func makeRemoteLoadMoreLoader(currentGames: [Game]) -> () async throws -> PaginatedGames {
         return {
-            let games = try await currentGames + remoteGamesProvider.getGames(
+            let nextBatchOfGames = try await remoteGamesProvider.getGames(
                 limit: 10,
                 offset: currentGames.count
             )
+            let reachedEnd = nextBatchOfGames.count != 10
+            let games = currentGames + nextBatchOfGames
             let page =  PaginatedGames(
                 games: games,
-                loadMore: ((games + currentGames).count % 10 != 0) ? nil : makeRemoteLoadMoreLoader(currentGames: games)
+                loadMore: reachedEnd ? nil : makeRemoteLoadMoreLoader(currentGames: games)
             )
             return page
         }
@@ -86,7 +88,7 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
             ]
         )
 
-        let secondPage = try await firstPage.loadMore?()
+        let secondPage = try await firstPage.loadMore!()
         
         XCTAssertEqual(
             remoteGamesProvider.capturedMessages,
@@ -96,7 +98,7 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
             ]
         )
 
-        _ = try await secondPage?.loadMore?()
+        let _ = try await secondPage.loadMore!()
 
         XCTAssertEqual(
             remoteGamesProvider.capturedMessages,
