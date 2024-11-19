@@ -26,7 +26,7 @@ private struct PrimaryWithFallbackGamesProvider {
 
 final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
     
-    func test_getGames_deliversGamesDeliveredByPrimaryProvider() throws {
+    func test_getGames_deliversGamesFromPrimaryProvider() throws {
         let primaryProvider = PaginatedGamesProviderStub()
         let games = [
             Game(id: 0, name: "first", imageId: nil),
