@@ -5,11 +5,11 @@
 import XCTest
 @testable import Games
 
-final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
+final class PrimaryWithFallbackPaginatedGamesProviderTests: XCTestCase {
     
     private let primaryProvider = PaginatedGamesProviderStub()
     private let fallbackProvider = PaginatedGamesProviderStub()
-    private lazy var sut = PrimaryWithFallbackGamesProvider(
+    private lazy var sut = PrimaryWithFallbackPaginatedGamesProvider(
         primaryProvider: primaryProvider,
         fallbackProvider: fallbackProvider
     )

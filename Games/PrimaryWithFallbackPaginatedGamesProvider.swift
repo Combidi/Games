@@ -2,7 +2,7 @@
 //  Created by Peter Combee on 19/11/2024.
 //
 
-struct PrimaryWithFallbackGamesProvider: PaginatedGamesProvider {
+struct PrimaryWithFallbackPaginatedGamesProvider: PaginatedGamesProvider {
     
     private let primaryProvider: PaginatedGamesProvider
     private let fallbackProvider: PaginatedGamesProvider
