@@ -2,7 +2,7 @@
 //  Created by Peter Combee on 19/11/2024.
 //
 
-struct RemotePaginatedGamesProvider {
+struct RemotePaginatedGamesProvider: PaginatedGamesProvider {
         
     private let startOffset: Int
     private let remoteGamesProvider: RemoteGamesProvider
