@@ -110,7 +110,7 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         )
     }
 
-    func test_loadMore_deliversGamesReceivedFromRemoteLoader() async throws {
+    func test_loadMore_deliversErrorOnRemoteLoaderError() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
         remoteGamesProvider.stub = .success(Array(repeating: Game(id: 0, name: "any", imageId: nil), count: 10))
