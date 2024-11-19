@@ -107,6 +107,23 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
             ]
         )
     }
+
+    func test_loadMore_deliversGamesReceivedFromRemoteLoader() async throws {
+        let remoteGamesProvider = RemoteGamesProviderSpy()
+        let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
+        remoteGamesProvider.stub = .success(Array(repeating: Game(id: 0, name: "any", imageId: nil), count: 10))
+        let firstPage = try await sut.getGames()
+
+        let remoteLoaderError = NSError(domain: "any", code: 1)
+        remoteGamesProvider.stub = .failure(remoteLoaderError)
+        
+        do {
+            let secondPage = try await firstPage.loadMore!()
+            XCTFail("Expected loadMore to throw, got \(secondPage) instead")
+        } catch {
+            XCTAssertEqual(error as NSError, remoteLoaderError)
+        }
+    }
     
     func test_loadMore_deliversNextPageContainingAccumulatedGames() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
