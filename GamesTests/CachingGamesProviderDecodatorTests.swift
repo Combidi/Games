@@ -33,6 +33,20 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
         
         XCTAssertEqual(result.games, games)
     }
+    
+    func test_getGames_deliversErrorOnProviderError() {
+        let provider = PaginatedGamesProviderStub()
+        let sut = CachingGamesProviderDecorator(provider: provider)
+        let providerError = NSError(domain: "any", code: 3)
+        provider.stub = .failure(providerError)
+        
+        do {
+            let result = try sut.getGames()
+            XCTFail("Expected getGames to throw, got \(result) instaead")
+        } catch {
+            XCTAssertEqual(error as NSError, providerError)
+        }
+    }
 }
 
 // MARK: - Helpers
