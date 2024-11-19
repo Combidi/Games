@@ -7,20 +7,20 @@ import XCTest
 
 private struct PrimaryWithFallbackGamesProvider: PaginatedGamesProvider {
     
-    private let primaryProvider: PaginatedGamesProviderStub
-    private let fallbackProvider: PaginatedGamesProviderStub
+    private let primaryProvider: PaginatedGamesProvider
+    private let fallbackProvider: PaginatedGamesProvider
     
     init(
-        primaryProvider: PaginatedGamesProviderStub,
-        fallbackProvider: PaginatedGamesProviderStub
+        primaryProvider: PaginatedGamesProvider,
+        fallbackProvider: PaginatedGamesProvider
     ) {
         self.primaryProvider = primaryProvider
         self.fallbackProvider = fallbackProvider
     }
     
-    func getGames() throws -> PaginatedGames {
-        do { return try primaryProvider.getGames() }
-        catch { return try fallbackProvider.getGames() }
+    func getGames() async throws -> PaginatedGames {
+        do { return try await primaryProvider.getGames() }
+        catch { return try await fallbackProvider.getGames() }
     }
 }
 
@@ -33,19 +33,19 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
         fallbackProvider: fallbackProvider
     )
 
-    func test_getGames_deliversGamesFromPrimaryProvider() throws {
+    func test_getGames_deliversGamesFromPrimaryProvider() async throws {
         let games = [
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
         ]
         primaryProvider.stub = .success(PaginatedGames(games: games, loadMore: nil))
 
-        let result = try sut.getGames()
+        let result = try await sut.getGames()
 
         XCTAssertEqual(result.games, games)
     }
     
-    func test_getGames_deliversGamesFromFallbackProviderOnPrimaryProviderError() throws {
+    func test_getGames_deliversGamesFromFallbackProviderOnPrimaryProviderError() async throws {
         primaryProvider.stub = .failure(NSError(domain: "any", code: 0))
         let games = [
             Game(id: 0, name: "first", imageId: nil),
@@ -53,19 +53,19 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
         ]
         fallbackProvider.stub = .success(PaginatedGames(games: games, loadMore: nil))
 
-        let result = try sut.getGames()
+        let result = try await sut.getGames()
 
         XCTAssertEqual(result.games, games)
     }
 
-    func test_getGames_deliversErrorOnFallbackProviderError() throws {
+    func test_getGames_deliversErrorOnFallbackProviderError() async throws {
         primaryProvider.stub = .failure(NSError(domain: "any", code: 0))
         
         let fallbackProviderError = NSError(domain: "any", code: 1)
         fallbackProvider.stub = .failure(fallbackProviderError)
 
         do {
-            let result = try sut.getGames()
+            let result = try await sut.getGames()
             XCTFail("Expected getGames to throw, got \(result) instead")
         } catch {
             XCTAssertEqual(error as NSError, fallbackProviderError)
