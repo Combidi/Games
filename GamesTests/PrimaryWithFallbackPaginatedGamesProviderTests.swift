@@ -75,7 +75,7 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
 
 // MARK: - Helpers
 
-private final class PaginatedGamesProviderStub {
+private final class PaginatedGamesProviderStub: PaginatedGamesProvider {
     var stub: Result<PaginatedGames, Error> = .success(PaginatedGames(games: [], loadMore: nil))
     
     func getGames() throws -> PaginatedGames {
