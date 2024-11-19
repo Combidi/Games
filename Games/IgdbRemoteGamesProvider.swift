@@ -4,7 +4,7 @@
 
 import Foundation
 
-struct RemoteGamesProvider {
+struct IgdbRemoteGamesProvider {
 
     private struct DecodableGame: Decodable {
         let id: Int

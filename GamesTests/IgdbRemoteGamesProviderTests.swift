@@ -5,10 +5,10 @@
 import XCTest
 @testable import Games
 
-final class RemoteGamesProviderTests: XCTestCase {
+final class IgdbRemoteGamesProviderTests: XCTestCase {
 
     private lazy var client = HttpClientSpy()
-    private lazy var sut = RemoteGamesProvider(client: client)
+    private lazy var sut = IgdbRemoteGamesProvider(client: client)
     
     func test_getGames_performsPostRequest() async throws {
         let limit = 10
