@@ -5,30 +5,34 @@
 import XCTest
 @testable import Games
 
+protocol GameCacheStorable {
+    func store(games: [Game])
+}
+
 private struct CachingGamesProviderDecorator: PaginatedGamesProvider {
     
-    private let provider: PaginatedGamesProviderStub
-    private let cache: Cache
+    private let provider: PaginatedGamesProvider
+    private let storage: GameCacheStorable
     
-    init(provider: PaginatedGamesProviderStub, cache: Cache) {
+    init(provider: PaginatedGamesProvider, storage: GameCacheStorable) {
         self.provider = provider
-        self.cache = cache
+        self.storage = storage
     }
     
-    func getGames() throws -> PaginatedGames {
-        let page = try provider.getGames()
-        cache.cachedGames = page.games
+    func getGames() async throws -> PaginatedGames {
+        let page = try await provider.getGames()
+        storage.store(games: page.games)
         return page
     }
 }
 
 final class CachingGamesProviderDecodatorTests: XCTestCase {
     
-    func test_getGames_deliversGamesReceivedFromProvider() throws {
+    func test_getGames_deliversGamesReceivedFromProvider() async throws {
         let provider = PaginatedGamesProviderStub()
         let sut = CachingGamesProviderDecorator(
             provider: provider,
-            cache: Cache()
+            storage: InMemoryGameStorage()
         )
         let games = [
             Game(id: 0, name: "first", imageId: nil),
@@ -36,41 +40,41 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
         ]
         provider.stub = .success(PaginatedGames(games: games, loadMore: nil))
         
-        let result = try sut.getGames()
+        let result = try await sut.getGames()
         
         XCTAssertEqual(result.games, games)
     }
     
-    func test_getGames_deliversErrorOnProviderError() {
+    func test_getGames_deliversErrorOnProviderError() async {
         let provider = PaginatedGamesProviderStub()
         let sut = CachingGamesProviderDecorator(
             provider: provider,
-            cache: Cache()
+            storage: InMemoryGameStorage()
         )
         let providerError = NSError(domain: "any", code: 3)
         provider.stub = .failure(providerError)
         
         do {
-            let result = try sut.getGames()
+            let result = try await sut.getGames()
             XCTFail("Expected getGames to throw, got \(result) instaead")
         } catch {
             XCTAssertEqual(error as NSError, providerError)
         }
     }
     
-    func test_getGames_storesReceivedGamesInCache() throws {
+    func test_getGames_storesReceivedGamesInCache() async throws {
         let provider = PaginatedGamesProviderStub()
-        let cache = Cache()
-        let sut = CachingGamesProviderDecorator(provider: provider, cache: cache)
+        let storage = InMemoryGameStorage()
+        let sut = CachingGamesProviderDecorator(provider: provider, storage: storage)
         let games = [
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
         ]
         provider.stub = .success(PaginatedGames(games: games, loadMore: nil))
         
-        _ = try sut.getGames()
+        _ = try await sut.getGames()
         
-        XCTAssertEqual(cache.cachedGames, games)
+        XCTAssertEqual(storage.storedGames, games)
     }
 }
 
@@ -84,6 +88,11 @@ private final class PaginatedGamesProviderStub: PaginatedGamesProvider {
     }
 }
 
-private final class Cache {
-    var cachedGames: [Game] = []
+private final class InMemoryGameStorage: GameCacheStorable {
+    
+    private(set) var storedGames: [Game] = []
+    
+    func store(games: [Game]) {
+        storedGames = games
+    }
 }
