@@ -5,7 +5,7 @@
 import XCTest
 @testable import Games
 
-private struct CachingGamesProviderDecorator {
+private struct CachingGamesProviderDecorator: PaginatedGamesProvider {
     
     private let provider: PaginatedGamesProviderStub
     private let cache: Cache
