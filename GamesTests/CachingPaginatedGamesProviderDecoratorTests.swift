@@ -5,7 +5,7 @@
 import XCTest
 @testable import Games
 
-final class CachingGamesProviderDecodatorTests: XCTestCase {
+final class CachingPaginatedGamesProviderDecoratorTests: XCTestCase {
     
     func test_getGames_deliversGamesReceivedFromProvider() async throws {
         let provider = PaginatedGamesProviderStub()
