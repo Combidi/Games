@@ -62,6 +62,26 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
         XCTAssertEqual(result, games)
     }
 
+    func test_getGames_deliversErrorOnFallbackProviderError() throws {
+        let primaryProvider = PaginatedGamesProviderStub()
+        primaryProvider.stub = .failure(NSError(domain: "any", code: 0))
+        
+        let fallbackProviderError = NSError(domain: "any", code: 1)
+        let fallbackProvider = PaginatedGamesProviderStub()
+        fallbackProvider.stub = .failure(fallbackProviderError)
+
+        let sut = PrimaryWithFallbackGamesProvider(
+            primaryProvider: primaryProvider,
+            fallbackProvider: fallbackProvider
+        )
+
+        do {
+            let result = try sut.getGames()
+            XCTFail("Expected getGames to throw, got \(result) instead")
+        } catch {
+            XCTAssertEqual(error as NSError, fallbackProviderError)
+        }
+    }
 }
 
 // MARK: - Helpers
