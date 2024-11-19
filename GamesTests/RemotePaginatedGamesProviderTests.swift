@@ -30,7 +30,7 @@ private struct RemotePaginatedGamesProvider {
             )
             let page =  PaginatedGames(
                 games: games,
-                loadMore: makeRemoteLoadMoreLoader(currentGames: games)
+                loadMore: ((games + currentGames).count % 10 != 0) ? nil : makeRemoteLoadMoreLoader(currentGames: games)
             )
             return page
         }
@@ -157,6 +157,22 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
             thirdPage?.games,
             firstBatchOfGames + secondBatchOfGames + thirdBatchOfGames
         )
+    }
+    
+    func test_doesNotProvideLoadMoreClosure_onceOnceAllPagesHaveBeenLoaded() async throws {
+        let remoteGamesProvider = RemoteGamesProviderSpy()
+        let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
+        let firstBatchOfGames = Array(repeating: Game(id: 0, name: "first", imageId: nil), count: 10)
+        remoteGamesProvider.stub = .success(firstBatchOfGames)
+        
+        let firstPage = try await sut.getGames()
+        
+        let secondBatchOfGames = Array(repeating: Game(id: 0, name: "second", imageId: nil), count: 9)
+        remoteGamesProvider.stub = .success(secondBatchOfGames)
+
+        let secondPage = try await firstPage.loadMore?()
+
+        XCTAssertNil(secondPage?.loadMore, "Expected no load more closure")
     }
 }
 
