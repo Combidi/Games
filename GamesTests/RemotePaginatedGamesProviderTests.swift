@@ -178,7 +178,7 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         )
     }
     
-    func test_doesNotProvideLoadMoreClosure_onceOnceAllPagesHaveBeenLoaded() async throws {
+    func test_doesNotProvideLoadMoreClosure_onceAllPagesHaveBeenLoaded() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
         let firstBatchOfGames = Array(repeating: Game(id: 0, name: "first", imageId: nil), count: 10)
@@ -194,6 +194,8 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         XCTAssertNil(secondPage?.loadMore, "Expected no load more closure")
     }
 }
+
+// MARK: - Helpers
 
 private final class RemoteGamesProviderSpy: RemoteGamesProvider {
         
