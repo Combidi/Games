@@ -8,13 +8,17 @@ import XCTest
 private struct CachingGamesProviderDecorator {
     
     private let provider: PaginatedGamesProviderStub
+    private let cache: Cache
     
-    init(provider: PaginatedGamesProviderStub) {
+    init(provider: PaginatedGamesProviderStub, cache: Cache) {
         self.provider = provider
+        self.cache = cache
     }
     
     func getGames() throws -> PaginatedGames {
-        try provider.getGames()
+        let page = try provider.getGames()
+        cache.cachedGames = page.games
+        return page
     }
 }
 
@@ -22,7 +26,10 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
     
     func test_getGames_deliversGamesReceivedFromProvider() throws {
         let provider = PaginatedGamesProviderStub()
-        let sut = CachingGamesProviderDecorator(provider: provider)
+        let sut = CachingGamesProviderDecorator(
+            provider: provider,
+            cache: Cache()
+        )
         let games = [
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
@@ -36,7 +43,10 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
     
     func test_getGames_deliversErrorOnProviderError() {
         let provider = PaginatedGamesProviderStub()
-        let sut = CachingGamesProviderDecorator(provider: provider)
+        let sut = CachingGamesProviderDecorator(
+            provider: provider,
+            cache: Cache()
+        )
         let providerError = NSError(domain: "any", code: 3)
         provider.stub = .failure(providerError)
         
@@ -46,6 +56,21 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
         } catch {
             XCTAssertEqual(error as NSError, providerError)
         }
+    }
+    
+    func test_getGames_storesReceivedGamesInCache() throws {
+        let provider = PaginatedGamesProviderStub()
+        let cache = Cache()
+        let sut = CachingGamesProviderDecorator(provider: provider, cache: cache)
+        let games = [
+            Game(id: 0, name: "first", imageId: nil),
+            Game(id: 1, name: "second", imageId: nil)
+        ]
+        provider.stub = .success(PaginatedGames(games: games, loadMore: nil))
+        
+        _ = try sut.getGames()
+        
+        XCTAssertEqual(cache.cachedGames, games)
     }
 }
 
@@ -57,4 +82,8 @@ private final class PaginatedGamesProviderStub: PaginatedGamesProvider {
     func getGames() throws -> PaginatedGames {
         try stub.get()
     }
+}
+
+private final class Cache {
+    var cachedGames: [Game] = []
 }
