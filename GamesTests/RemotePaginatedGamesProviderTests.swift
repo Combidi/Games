@@ -29,7 +29,7 @@ private struct RemotePaginatedGamesProvider {
                 offset: currentGames.count
             )
             let page =  PaginatedGames(
-                games: [],
+                games: games,
                 loadMore: makeRemoteLoadMoreLoader(currentGames: games)
             )
             return page
@@ -91,6 +91,40 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
                 .init(limit: 10, offset: 10),
                 .init(limit: 10, offset: 20)
             ]
+        )
+    }
+    
+    func test_loadMore_deliversNextPageContainingAccumulatedGames() async throws {
+        let remoteGamesProvider = RemoteGamesProviderSpy()
+        let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
+        let firstBatchOfGames = Array(repeating: Game(id: 0, name: "first", imageId: nil), count: 10)
+        remoteGamesProvider.stub = .success(firstBatchOfGames)
+        
+        let firstPage = try await sut.getGames()
+        
+        XCTAssertEqual(
+            firstPage.games,
+            firstBatchOfGames
+        )
+        
+        let secondBatchOfGames = Array(repeating: Game(id: 0, name: "second", imageId: nil), count: 10)
+        remoteGamesProvider.stub = .success(secondBatchOfGames)
+
+        let secondPage = try await firstPage.loadMore?()
+        
+        XCTAssertEqual(
+            secondPage?.games,
+            firstBatchOfGames + secondBatchOfGames
+        )
+
+        let thirdBatchOfGames = Array(repeating: Game(id: 0, name: "third", imageId: nil), count: 10)
+        remoteGamesProvider.stub = .success(thirdBatchOfGames)
+        
+        let thirdPage = try await secondPage?.loadMore?()
+
+        XCTAssertEqual(
+            thirdPage?.games,
+            firstBatchOfGames + secondBatchOfGames + thirdBatchOfGames
         )
     }
 }
