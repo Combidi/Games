@@ -18,7 +18,7 @@ private struct PrimaryWithFallbackGamesProvider {
         self.fallbackProvider = fallbackProvider
     }
     
-    func getGames() throws -> [Game] {
+    func getGames() throws -> PaginatedGames {
         do { return try primaryProvider.getGames() }
         catch { return try fallbackProvider.getGames() }
     }
@@ -38,11 +38,11 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
         ]
-        primaryProvider.stub = .success(games)
+        primaryProvider.stub = .success(PaginatedGames(games: games, loadMore: nil))
 
         let result = try sut.getGames()
 
-        XCTAssertEqual(result, games)
+        XCTAssertEqual(result.games, games)
     }
     
     func test_getGames_deliversGamesFromFallbackProviderOnPrimaryProviderError() throws {
@@ -51,11 +51,11 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
         ]
-        fallbackProvider.stub = .success(games)
+        fallbackProvider.stub = .success(PaginatedGames(games: games, loadMore: nil))
 
         let result = try sut.getGames()
 
-        XCTAssertEqual(result, games)
+        XCTAssertEqual(result.games, games)
     }
 
     func test_getGames_deliversErrorOnFallbackProviderError() throws {
@@ -76,9 +76,9 @@ final class PrimaryWithFallbackGamesProviderTests: XCTestCase {
 // MARK: - Helpers
 
 private final class PaginatedGamesProviderStub {
-    var stub: Result<[Game], Error> = .success([])
+    var stub: Result<PaginatedGames, Error> = .success(PaginatedGames(games: [], loadMore: nil))
     
-    func getGames() throws -> [Game] {
+    func getGames() throws -> PaginatedGames {
         try stub.get()
     }
 }
