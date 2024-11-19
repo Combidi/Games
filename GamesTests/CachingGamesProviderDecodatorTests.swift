@@ -9,7 +9,7 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
     
     func test_getGames_deliversGamesReceivedFromProvider() async throws {
         let provider = PaginatedGamesProviderStub()
-        let sut = CachingGamesProviderDecorator(
+        let sut = CachingPaginatedGamesProviderDecorator(
             provider: provider,
             storage: InMemoryGameStorage()
         )
@@ -26,7 +26,7 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
     
     func test_getGames_deliversErrorOnProviderError() async {
         let provider = PaginatedGamesProviderStub()
-        let sut = CachingGamesProviderDecorator(
+        let sut = CachingPaginatedGamesProviderDecorator(
             provider: provider,
             storage: InMemoryGameStorage()
         )
@@ -44,7 +44,7 @@ final class CachingGamesProviderDecodatorTests: XCTestCase {
     func test_getGames_storesReceivedGamesInCache() async throws {
         let provider = PaginatedGamesProviderStub()
         let storage = InMemoryGameStorage()
-        let sut = CachingGamesProviderDecorator(provider: provider, storage: storage)
+        let sut = CachingPaginatedGamesProviderDecorator(provider: provider, storage: storage)
         let games = [
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)

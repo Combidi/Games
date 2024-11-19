@@ -6,7 +6,7 @@ protocol GameCacheStorable {
     func store(games: [Game])
 }
 
-struct CachingGamesProviderDecorator: PaginatedGamesProvider {
+struct CachingPaginatedGamesProviderDecorator: PaginatedGamesProvider {
     
     private let provider: PaginatedGamesProvider
     private let storage: GameCacheStorable
