@@ -19,7 +19,21 @@ private struct RemotePaginatedGamesProvider {
     
     func getGames() async throws -> PaginatedGames {
         let games = try await remoteGamesProvider.getGames(limit: 10, offset: 0)
-        return PaginatedGames(games: games, loadMore: nil)
+        return PaginatedGames(games: games, loadMore: makeRemoteLoadMoreLoader(currentGames: games))
+    }
+    
+    private func makeRemoteLoadMoreLoader(currentGames: [Game]) -> () async throws -> PaginatedGames {
+        return {
+            let games = try await currentGames + remoteGamesProvider.getGames(
+                limit: 10,
+                offset: currentGames.count
+            )
+            let page =  PaginatedGames(
+                games: [],
+                loadMore: makeRemoteLoadMoreLoader(currentGames: games)
+            )
+            return page
+        }
     }
 }
 
@@ -33,6 +47,7 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         
         XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 0)])
     }
+
     func test_getGames_deliversGamesReceivedFromRemoteLoader() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
         let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
@@ -41,6 +56,43 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         let result = try await sut.getGames()
         
         XCTAssertEqual(result.games, [game])
+    }
+    
+    func test_loadMore_loadsNextPageFromRemoteLoader() async throws {
+        let remoteGamesProvider = RemoteGamesProviderSpy()
+        let sut = RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
+        remoteGamesProvider.stub = .success(Array(repeating: Game(id: 0, name: "any", imageId: nil), count: 10))
+        
+        let firstPage = try await sut.getGames()
+
+        XCTAssertEqual(
+            remoteGamesProvider.capturedMessages,
+            [
+                .init(limit: 10, offset: 0)
+            ]
+        )
+
+        let secondPage = try await firstPage.loadMore?()
+        
+        XCTAssertEqual(
+            remoteGamesProvider.capturedMessages,
+            [
+                .init(limit: 10, offset: 0),
+                .init(limit: 10, offset: 10),
+            ]
+        )
+
+        _ = try await secondPage?.loadMore?()
+
+        XCTAssertEqual(
+            remoteGamesProvider.capturedMessages,
+            [
+                .init(limit: 10, offset: 0),
+                .init(limit: 10, offset: 10),
+                .init(limit: 10, offset: 20)
+            ]
+        )
+    }
 }
 
 private final class RemoteGamesProviderSpy: RemoteGamesProvider {
