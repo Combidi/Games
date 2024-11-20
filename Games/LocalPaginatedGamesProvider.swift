@@ -13,9 +13,9 @@ struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
     typealias Offset = Int
     
     private let cache: GameCacheRetrievable
-    private let loadMore: (Offset) -> PaginatedGames
+    private let loadMore: (Offset) async throws -> PaginatedGames
     
-    init(cache: GameCacheRetrievable, loadMore: @escaping (Offset) -> PaginatedGames) {
+    init(cache: GameCacheRetrievable, loadMore: @escaping (Offset) async throws -> PaginatedGames) {
         self.cache = cache
         self.loadMore = loadMore
     }
@@ -23,7 +23,7 @@ struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
     func getGames() throws -> PaginatedGames {
         guard let games = cache.cachedGames() else { throw MissingGamesError() }
         return PaginatedGames(games: games, loadMore: {
-            loadMore(games.count)
+            try await loadMore(games.count)
         })
     }
 }
