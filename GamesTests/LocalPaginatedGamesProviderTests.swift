@@ -5,16 +5,20 @@
 import XCTest
 @testable import Games
 
+protocol GameCacheRetrievable {
+    func cachedGames() -> [Game]
+}
+
 private struct LocalPaginatedGamesProvider {
     
-    private let cache: Cache
+    private let cache: GameCacheRetrievable
     
-    init(cache: Cache) {
+    init(cache: GameCacheRetrievable) {
         self.cache = cache
     }
     
     func getGames() -> PaginatedGames {
-        PaginatedGames(games: cache.games, loadMore: nil)
+        PaginatedGames(games: cache.cachedGames(), loadMore: nil)
     }
 }
 
@@ -36,11 +40,15 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
 
 // MARK: - Helpers
 
-private final class Cache {
+private final class Cache: GameCacheRetrievable {
     
-    let games: [Game]
+    private let games: [Game]
     
     init(games: [Game]) {
         self.games = games
+    }
+    
+    func cachedGames() -> [Game] {
+        games
     }
 }
