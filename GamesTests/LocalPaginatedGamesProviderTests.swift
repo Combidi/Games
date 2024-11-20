@@ -93,7 +93,7 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
 
 // MARK: - Helpers
 
-private final class Cache: GameCacheRetrievable {
+private struct Cache: GameCacheRetrievable {
         
     private let games: [Game]?
     
