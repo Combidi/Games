@@ -21,7 +21,7 @@ struct PaginatedGamesView<GameView: View>: View {
         Group {
             switch viewModel.state {
             case .loading:
-                Text("Loading...")
+                ProgressView("Loading...")
                 
             case .loaded(let presentable):
                 listView(for: presentable)
