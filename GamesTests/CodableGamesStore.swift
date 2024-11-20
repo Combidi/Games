@@ -13,9 +13,9 @@ private struct CodableGamesStore: GameCacheRetrievable, GameCacheStorable {
         self.storeUrl = storeUrl
     }
     
-    func retrieveGames() -> [Game]? {
+    func retrieveGames() throws -> [Game]? {
         guard let data = try? Data(contentsOf: storeUrl) else { return nil }
-        return try! JSONDecoder().decode([Game].self, from: data)
+        return try JSONDecoder().decode([Game].self, from: data)
     }
     
     func store(games: [Game]) {
@@ -41,18 +41,26 @@ final class CodableGamesStoreTests: XCTestCase {
     func test_retrieveGames_deliversNilOnEmptyCache() {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
     
-        XCTAssertNil(sut.retrieveGames())
+        XCTAssertNil(try! sut.retrieveGames())
     }
     
-    func test_retrieveGames_test_deliversFoundValuesOnNonEmptyCache() {
+    func test_retrieveGames_test_deliversFoundValuesOnNonEmptyCache() throws {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
         let games = [Game(id: 1, name: "nice game", imageId: nil)]
         
         sut.store(games: games)
         
-        let retrievedGames = sut.retrieveGames()
+        let retrievedGames = try sut.retrieveGames()
         
         XCTAssertEqual(retrievedGames, games)
+    }
+    
+    func test_retrieveGames_deliversErrorOnRetrievalError() {
+        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+
+        try! "invalid data".write(to: testSpecificStoreURL, atomically: false, encoding: .utf8)
+     
+        XCTAssertThrowsError(try sut.retrieveGames())
     }
     
     private var testSpecificStoreURL: URL {
