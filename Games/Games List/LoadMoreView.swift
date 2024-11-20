@@ -6,13 +6,17 @@ import SwiftUI
 
 struct LoadMoreView: View {
     
-    let loadMore: () async throws -> Void
-    
     private enum LoadMoreState {
         case loading
         case error
     }
-    
+
+    private let loadMore: () async throws -> Void
+
+    init(loadMore: @escaping () async throws -> Void) {
+        self.loadMore = loadMore
+    }
+        
     @State private var state: LoadMoreState = .loading
     
     var body: some View {
