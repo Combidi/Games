@@ -9,7 +9,7 @@ protocol GameCacheRetrievable {
     func cachedGames() -> [Game]?
 }
 
-private struct LocalPaginatedGamesProvider {
+private struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
     
     struct MissingGamesError: Error {}
     
