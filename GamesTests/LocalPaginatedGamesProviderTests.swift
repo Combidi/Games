@@ -75,7 +75,7 @@ private struct Cache: GameCacheRetrievable {
         self.games = games
     }
     
-    func cachedGames() -> [Game]? {
+    func retrieveGames() -> [Game]? {
         games
     }
 }
