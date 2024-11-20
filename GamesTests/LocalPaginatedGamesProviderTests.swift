@@ -13,10 +13,12 @@ private struct LocalPaginatedGamesProvider {
     
     struct MissingGamesError: Error {}
     
-    private let cache: GameCacheRetrievable
-    private let loadMore: (Int) -> PaginatedGames
+    typealias Offset = Int
     
-    init(cache: GameCacheRetrievable, loadMore: @escaping (Int) -> PaginatedGames) {
+    private let cache: GameCacheRetrievable
+    private let loadMore: (Offset) -> PaginatedGames
+    
+    init(cache: GameCacheRetrievable, loadMore: @escaping (Offset) -> PaginatedGames) {
         self.cache = cache
         self.loadMore = loadMore
     }
