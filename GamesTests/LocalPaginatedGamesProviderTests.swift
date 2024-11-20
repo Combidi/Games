@@ -12,7 +12,7 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
         ]
-        let cache = Cache(games: games)
+        let cache = Cache(stub: .success(games))
         let sut = LocalPaginatedGamesProvider(
             cache: cache,
             loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
@@ -24,7 +24,7 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
     }
     
     func test_getGames_withoutCachedGames_deliversError() {
-        let cache = Cache(games: nil)
+        let cache = Cache(stub: .success(nil))
         let sut = LocalPaginatedGamesProvider(
             cache: cache,
             loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
@@ -35,13 +35,26 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
         }
     }
 
+    func test_getGames_deliversErrorOnCacheRetievalError() {
+        let cacheRetrievalError = NSError(domain: "any", code: 10)
+        let cache = Cache(stub: .failure(cacheRetrievalError))
+        let sut = LocalPaginatedGamesProvider(
+            cache: cache,
+            loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
+        )
+
+        XCTAssertThrowsError(try sut.getGames()) { error in
+            XCTAssertEqual(error as NSError, cacheRetrievalError)
+        }
+    }
+    
     func test_loadMore_loadMoreProvidingOffsetFromWhichToLoadMore() async throws {
         let amountOfCachedGames = 12
         let cachedGames = Array(
             repeating: Game(id: 0, name: "any", imageId: nil),
             count: amountOfCachedGames
         )
-        let cache = Cache(games: cachedGames)
+        let cache = Cache(stub: .success(cachedGames))
         var capturedOffset: Int?
         let additionalGames = [
             Game(id: 1, name: "additionalGame", imageId: nil)
@@ -66,13 +79,13 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
 
 private struct Cache: GameCacheRetrievable {
         
-    private let games: [Game]?
+    private let stub: Result<[Game]?, Error>
     
-    init(games: [Game]?) {
-        self.games = games
+    init(stub: Result<[Game]?, Error>) {
+        self.stub = stub
     }
     
-    func retrieveGames() -> [Game]? {
-        games
+    func retrieveGames() throws -> [Game]? {
+        try stub.get()
     }
 }
