@@ -45,10 +45,7 @@ final class PrimaryWithFallbackPaginatedGamesProviderTests: XCTestCase {
         let fallbackProviderError = NSError(domain: "any", code: 1)
         fallbackProvider.stub = .failure(fallbackProviderError)
 
-        do {
-            let result = try await sut.getGames()
-            XCTFail("Expected getGames to throw, got \(result) instead")
-        } catch {
+        await assertThrowsAsyncError(try await sut.getGames()) { error in
             XCTAssertEqual(error as NSError, fallbackProviderError)
         }
     }

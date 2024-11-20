@@ -26,10 +26,7 @@ final class IgdbRemoteGamesProviderTests: XCTestCase {
     func test_getGames_deliversErrorOnClientError() async {
         client.stub = .failure(NSError(domain: "any", code: 0))
         
-        do {
-            let result = try await sut.getGames(limit: 10, offset: 0)
-            XCTFail("Expected error, got \(result) instead")
-        } catch {}
+        await assertThrowsAsyncError(try await sut.getGames(limit: 10, offset: 0))
     }
     
     func test_getGames_deliversGamesOnValidJsonGamesData() async throws {
@@ -89,9 +86,6 @@ final class IgdbRemoteGamesProviderTests: XCTestCase {
         """
         client.stub = .success(Data(gamesJson.utf8))
         
-        do {
-            let result = try await sut.getGames(limit: 10, offset: 0)
-            XCTFail("Expected error, got \(result) instead")
-        } catch {}
+        await assertThrowsAsyncError(try await sut.getGames(limit: 10, offset: 0))
     }
 }

@@ -34,10 +34,7 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         let remoteLoaderError = NSError(domain: "any", code: 1)
         remoteGamesProvider.stub = .failure(remoteLoaderError)
         
-        do {
-            let result = try await sut.getGames()
-            XCTFail("Expected getGames to throw, got \(result) instead")
-        } catch {
+        await assertThrowsAsyncError(try await sut.getGames()) { error in
             XCTAssertEqual(error as NSError, remoteLoaderError)
         }
     }
@@ -136,10 +133,7 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         let remoteLoaderError = NSError(domain: "any", code: 1)
         remoteGamesProvider.stub = .failure(remoteLoaderError)
         
-        do {
-            let secondPage = try await firstPage.loadMore!()
-            XCTFail("Expected loadMore to throw, got \(secondPage) instead")
-        } catch {
+        await assertThrowsAsyncError(try await firstPage.loadMore!()) { error in
             XCTAssertEqual(error as NSError, remoteLoaderError)
         }
     }

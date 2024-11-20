@@ -33,12 +33,9 @@ final class CachingPaginatedGamesProviderDecoratorTests: XCTestCase {
         let providerError = NSError(domain: "any", code: 3)
         provider.stub = .failure(providerError)
         
-        do {
-            let result = try await sut.getGames()
-            XCTFail("Expected getGames to throw, got \(result) instaead")
-        } catch {
+        await assertThrowsAsyncError(try await sut.getGames()) { error in
             XCTAssertEqual(error as NSError, providerError)
-        }
+        }        
     }
     
     func test_getGames_storesReceivedGamesInCache() async throws {

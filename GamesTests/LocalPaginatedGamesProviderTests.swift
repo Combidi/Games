@@ -30,10 +30,7 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
             loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
         )
 
-        do {
-            let result = try sut.getGames()
-            XCTFail("Expected getGames to throw error, got \(result) instead")
-        } catch {
+        XCTAssertThrowsError(try sut.getGames()) { error in
             XCTAssertTrue(error is LocalPaginatedGamesProvider.MissingGamesError)
         }
     }
