@@ -78,6 +78,18 @@ final class CodableGamesStoreTests: XCTestCase {
         XCTAssertNoThrow(sut.store(games: games))
     }
     
+    func test_storeGames_overridesPreviouslyInsertedCacheValues() {
+        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let firstGame = Game(id: 1, name: "nice game", imageId: nil)
+
+        sut.store(games: [firstGame])
+        
+        let secondGame = Game(id: 2, name: "even nicer game", imageId: nil)
+        sut.store(games: [secondGame])
+
+        XCTAssertEqual(try sut.retrieveGames(), [secondGame])
+    }
+    
     private var testSpecificStoreURL: URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(type(of: self)).store")
     }
