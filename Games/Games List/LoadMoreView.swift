@@ -19,8 +19,7 @@ struct LoadMoreView: View {
         switch state {
         case .loading:
             HStack {
-                Spinner()
-                Text("Loading more...")
+                ProgressView("Loading more...")
             }
             .onAppear { load() }
         case .error:
@@ -37,24 +36,6 @@ struct LoadMoreView: View {
                 state = .error
             }
         }
-    }
-}
-
-private struct Spinner: View {
-    
-    @State private var degrees = 0.0
-
-    var body: some View {
-        Image(systemName: "gauge.with.needle")
-            .resizable()
-            .frame(width: 30, height: 30)
-            .rotationEffect(.degrees(degrees))
-            .onAppear {
-                withAnimation(.linear(duration: 1)
-                    .repeatForever(autoreverses: false)) {
-                        degrees = 360.0
-                    }
-            }
     }
 }
 
