@@ -69,6 +69,14 @@ final class CodableGamesStoreTests: XCTestCase {
 
         XCTAssertNoThrow(sut.store(games: games))
     }
+
+    func test_storeGames_deliversNoErrorOnNonEmptyCache() {
+        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let games = [Game(id: 1, name: "nice game", imageId: nil)]
+
+        XCTAssertNoThrow(sut.store(games: games))
+        XCTAssertNoThrow(sut.store(games: games))
+    }
     
     private var testSpecificStoreURL: URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(type(of: self)).store")
