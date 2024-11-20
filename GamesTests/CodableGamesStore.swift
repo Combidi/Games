@@ -18,9 +18,9 @@ private struct CodableGamesStore: GameCacheRetrievable, GameCacheStorable {
         return try JSONDecoder().decode([Game].self, from: data)
     }
     
-    func store(games: [Game]) {
-        let encoded = try! JSONEncoder().encode(games)
-        try! encoded.write(to: storeUrl)
+    func store(games: [Game]) throws {
+        let encoded = try JSONEncoder().encode(games)
+        try encoded.write(to: storeUrl)
     }
 }
 
@@ -48,7 +48,7 @@ final class CodableGamesStoreTests: XCTestCase {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
         let games = [Game(id: 1, name: "nice game", imageId: nil)]
         
-        sut.store(games: games)
+        try sut.store(games: games)
         
         let retrievedGames = try sut.retrieveGames()
         
@@ -67,27 +67,34 @@ final class CodableGamesStoreTests: XCTestCase {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
         let games = [Game(id: 1, name: "nice game", imageId: nil)]
 
-        XCTAssertNoThrow(sut.store(games: games))
+        XCTAssertNoThrow(try sut.store(games: games))
     }
 
     func test_storeGames_deliversNoErrorOnNonEmptyCache() {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
         let games = [Game(id: 1, name: "nice game", imageId: nil)]
 
-        XCTAssertNoThrow(sut.store(games: games))
-        XCTAssertNoThrow(sut.store(games: games))
+        XCTAssertNoThrow(try sut.store(games: games))
+        XCTAssertNoThrow(try sut.store(games: games))
     }
     
-    func test_storeGames_overridesPreviouslyInsertedCacheValues() {
+    func test_storeGames_overridesPreviouslyInsertedCacheValues() throws {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
         let firstGame = Game(id: 1, name: "nice game", imageId: nil)
 
-        sut.store(games: [firstGame])
+        try sut.store(games: [firstGame])
         
         let secondGame = Game(id: 2, name: "even nicer game", imageId: nil)
-        sut.store(games: [secondGame])
+        try sut.store(games: [secondGame])
 
         XCTAssertEqual(try sut.retrieveGames(), [secondGame])
+    }
+    
+    func test_storeGames_deliversErrorOnInsertionError() {
+        let invalidStoreURL = URL(string: "invalid://store-url")!
+        let sut = CodableGamesStore(storeUrl: invalidStoreURL)
+
+        XCTAssertThrowsError(try sut.store(games: [Game(id: 1, name: "nice game", imageId: nil)]))
     }
     
     private var testSpecificStoreURL: URL {
