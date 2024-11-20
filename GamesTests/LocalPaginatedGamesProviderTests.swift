@@ -24,7 +24,7 @@ private struct LocalPaginatedGamesProvider {
 
 final class LocalPaginatedGamesProviderTests: XCTestCase {
     
-    func test_getGames_deliversGamesFromCache() {
+    func test_getGames_withCachedGames_deliversGamesFromCache() {
         let games = [
             Game(id: 0, name: "first", imageId: nil),
             Game(id: 1, name: "second", imageId: nil)
