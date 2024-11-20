@@ -52,6 +52,19 @@ final class CachingPaginatedGamesProviderDecoratorTests: XCTestCase {
         
         XCTAssertEqual(storage.storedGames, games)
     }
+    
+    func test_getGames_deliversErrorOnCacheInsertionError() async {
+        let provider = PaginatedGamesProviderStub()
+        let storage = InMemoryGameStorage()
+        let sut = CachingPaginatedGamesProviderDecorator(provider: provider, storage: storage)
+
+        let storageInsertionError = NSError(domain: "any", code: 3)
+        storage.throwOnInsertion = storageInsertionError
+        
+        await assertThrowsAsyncError(try await sut.getGames()) { error in
+            XCTAssertEqual(error as NSError, storageInsertionError)
+        }
+    }
 }
 
 // MARK: - Helpers
@@ -60,7 +73,10 @@ private final class InMemoryGameStorage: GameCacheStorable {
     
     private(set) var storedGames: [Game] = []
     
-    func store(games: [Game]) {
-        storedGames = games
+    var throwOnInsertion: Error?
+    
+    func store(games: [Game]) throws {
+        try throwOnInsertion.map { throw $0 }
+        return storedGames = games
     }
 }

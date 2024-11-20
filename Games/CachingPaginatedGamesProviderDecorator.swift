@@ -3,7 +3,7 @@
 //
 
 protocol GameCacheStorable {
-    func store(games: [Game])
+    func store(games: [Game]) throws
 }
 
 struct CachingPaginatedGamesProviderDecorator: PaginatedGamesProvider {
@@ -18,7 +18,7 @@ struct CachingPaginatedGamesProviderDecorator: PaginatedGamesProvider {
     
     func getGames() async throws -> PaginatedGames {
         let page = try await provider.getGames()
-        storage.store(games: page.games)
+        try storage.store(games: page.games)
         return page
     }
 }
