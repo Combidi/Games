@@ -5,32 +5,6 @@
 import XCTest
 @testable import Games
 
-protocol GameCacheRetrievable {
-    func cachedGames() -> [Game]?
-}
-
-private struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
-    
-    struct MissingGamesError: Error {}
-    
-    typealias Offset = Int
-    
-    private let cache: GameCacheRetrievable
-    private let loadMore: (Offset) -> PaginatedGames
-    
-    init(cache: GameCacheRetrievable, loadMore: @escaping (Offset) -> PaginatedGames) {
-        self.cache = cache
-        self.loadMore = loadMore
-    }
-    
-    func getGames() throws -> PaginatedGames {
-        guard let games = cache.cachedGames() else { throw MissingGamesError() }
-        return PaginatedGames(games: games, loadMore: {
-            loadMore(games.count)
-        })
-    }
-}
-
 final class LocalPaginatedGamesProviderTests: XCTestCase {
     
     func test_getGames_withCachedGames_deliversGamesFromCache() throws {
