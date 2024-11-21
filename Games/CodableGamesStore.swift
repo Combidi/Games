@@ -6,6 +6,12 @@ import Foundation
 
 struct CodableGamesStore: GameCacheRetrievable, GameCacheStorable {
         
+    private struct CodableGame: Codable {
+        let id: Int
+        let name: String
+        let imageId: String?
+    }
+    
     private let storeUrl: URL
     
     init(storeUrl: URL) {
@@ -14,11 +20,18 @@ struct CodableGamesStore: GameCacheRetrievable, GameCacheStorable {
     
     func retrieveGames() throws -> [Game]? {
         guard let data = try? Data(contentsOf: storeUrl) else { return nil }
-        return try JSONDecoder().decode([Game].self, from: data)
+        let codableGames = try JSONDecoder().decode([CodableGame].self, from: data)
+        let games = codableGames.map {
+            Game(id: $0.id, name: $0.name, imageId: $0.imageId)
+        }
+        return games
     }
     
     func store(games: [Game]) throws {
-        let encoded = try JSONEncoder().encode(games)
+        let codableGames = games.map {
+            CodableGame(id: $0.id, name: $0.name, imageId: $0.imageId)
+        }
+        let encoded = try JSONEncoder().encode(codableGames)
         try encoded.write(to: storeUrl)
     }
 }
