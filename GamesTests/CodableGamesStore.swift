@@ -97,6 +97,21 @@ final class CodableGamesStoreTests: XCTestCase {
         XCTAssertThrowsError(try sut.store(games: [Game(id: 1, name: "nice game", imageId: nil)]))
     }
     
+    func test_storedGames_persistsBetweenSessions() throws {
+        let games = [
+            Game(id: 1, name: "nice game", imageId: nil),
+            Game(id: 2, name: "even nicer game", imageId: nil)
+        ]
+
+        let sutToInsert = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        try sutToInsert.store(games: games)
+
+        let sutToRetrieve = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let retrievedGames = try sutToRetrieve.retrieveGames()
+
+        XCTAssertEqual(retrievedGames, games)
+    }
+    
     private var testSpecificStoreURL: URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(type(of: self)).store")
     }
