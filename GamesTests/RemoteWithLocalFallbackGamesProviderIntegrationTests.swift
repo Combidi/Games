@@ -5,29 +5,42 @@
 import XCTest
 @testable import Games
 
-private func makeLocalWithRemoteFallbackGamesProvider(
-    cache: GameCacheRetrievable & GameCacheStorable,
-    remoteGamesProvider: RemoteGamesProviderStub
-) -> PaginatedGamesProvider {
-    PrimaryWithFallbackPaginatedGamesProvider(
-        primaryProvider: LocalPaginatedGamesProvider(
-            cache: cache,
-            loadMore: { offset in
-                let remoteLoader = RemotePaginatedGamesProvider(
-                    startOffset: offset,
-                    remoteGamesProvider: remoteGamesProvider
-                )
-                return try await remoteLoader.getGames()
-            }
-        ),
-        fallbackProvider: CachingPaginatedGamesProviderDecorator(
-            provider: RemotePaginatedGamesProvider(
-                remoteGamesProvider: remoteGamesProvider
-            ),
-            storage: cache
-        )
-    )
+private typealias PaginatedGamesProvider = () async throws -> PaginatedGames
+
+private struct PaginatedGamesProviderAssembler {
+    
+    private let cache: GameCacheRetrievable & GameCacheStorable
+    private let remoteGamesProvider: RemoteGamesProviderStub
+    private let pageSize = 10
+
+    init(cache: GameCacheRetrievable & GameCacheStorable, remoteGamesProvider: RemoteGamesProviderStub) {
+        self.cache = cache
+        self.remoteGamesProvider = remoteGamesProvider
+    }
+    
+    func makeLocalWithRemoteFallbackGamesProvider() -> PaginatedGamesProvider {
+        let cachedGames = (try? cache.retrieveGames() ?? []) ?? []
+        return makeRemoteLoadMoreLoader(currentGames: cachedGames)
+    }
+
+    private func makeRemoteLoadMoreLoader(currentGames: [Game]) -> PaginatedGamesProvider {
+        {
+            let nextBatchOfGames = try await remoteGamesProvider.getGames(
+                limit: pageSize,
+                offset: currentGames.count
+            )
+            let games = currentGames + nextBatchOfGames
+            try cache.store(games: games)
+            let reachedEnd = nextBatchOfGames.count != pageSize
+            let page =  PaginatedGames(
+                games: games,
+                loadMore: reachedEnd ? nil : makeRemoteLoadMoreLoader(currentGames: games)
+            )
+            return page
+        }
+    }
 }
+ 
 
 final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
     
@@ -41,12 +54,13 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         ]
         remoteGamesProvider.stub = .success(gamesFromRemote)
         
-        let sut = makeLocalWithRemoteFallbackGamesProvider(
+        let getGames = PaginatedGamesProviderAssembler(
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
+        .makeLocalWithRemoteFallbackGamesProvider()
         
-        let loadedGames = try await sut.getGames().games
+        let loadedGames = try await getGames().games
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
@@ -61,12 +75,13 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         ]
         remoteGamesProvider.stub = .success(gamesFromRemote)
         
-        let sut = makeLocalWithRemoteFallbackGamesProvider(
+        let getGames = PaginatedGamesProviderAssembler(
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        
-        let loadedGames = try await sut.getGames().games
+        .makeLocalWithRemoteFallbackGamesProvider()
+
+        let loadedGames = try await getGames().games
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
@@ -79,12 +94,13 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         ]
         let cache = Cache(stub: .success(cachedGames))
         
-        let sut = makeLocalWithRemoteFallbackGamesProvider(
+        let getGames = PaginatedGamesProviderAssembler(
             cache: cache,
             remoteGamesProvider: RemoteGamesProviderStub()
         )
-        
-        let loadedGames = try await sut.getGames().games
+        .makeLocalWithRemoteFallbackGamesProvider()
+
+        let loadedGames = try await getGames().games
         
         XCTAssertEqual(loadedGames, cachedGames)
     }
@@ -93,17 +109,18 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         
         let cache = Cache(stub: .success(nil))
         let remoteGamesProvider = RemoteGamesProviderStub()
-        let sut = makeLocalWithRemoteFallbackGamesProvider(
+        let getGames = PaginatedGamesProviderAssembler(
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
+        .makeLocalWithRemoteFallbackGamesProvider()
         let remoteGames = [
             Game(id: 1, name: "Game 1", imageId: nil),
             Game(id: 2, name: "Game 2", imageId: nil)
         ]
         remoteGamesProvider.stub = .success(remoteGames)
         
-        _ = try await sut.getGames().games
+        _ = try await getGames().games
         
         let cachedGames = try cache.retrieveGames()
         
@@ -117,7 +134,14 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             Game(id: 2, name: "Game 2", imageId: nil)
         ]
         let cache = Cache(stub: .success(cachedGames))
-        let remoteGames = [
+        let remoteGamesProvider = RemoteGamesProviderStub()
+        let getGames = PaginatedGamesProviderAssembler(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
+            .makeLocalWithRemoteFallbackGamesProvider()
+        
+        let firstBatchOfRemoteGames = [
             Game(id: 3, name: "Game 3", imageId: nil),
             Game(id: 4, name: "Game 4", imageId: nil),
             Game(id: 5, name: "Game 5", imageId: nil),
@@ -129,20 +153,28 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             Game(id: 11, name: "Game 11", imageId: nil),
             Game(id: 12, name: "Game 12", imageId: nil)
         ]
-        let remoteGamesProvider = RemoteGamesProviderStub()
-        remoteGamesProvider.stub = .success(remoteGames)
+        remoteGamesProvider.stub = .success(firstBatchOfRemoteGames)
         
-        let sut = makeLocalWithRemoteFallbackGamesProvider(
-            cache: cache,
-            remoteGamesProvider: remoteGamesProvider
-        )
+        let firstPage = try await getGames()
         
-        let firstPage = try await sut.getGames()
+        XCTAssertEqual(firstPage.games.map(\.id), (cachedGames + firstBatchOfRemoteGames).map(\.id))
         
-        let loadMore = try XCTUnwrap(firstPage.loadMore)
-        let secondPage = try await loadMore()
+        let secondBatchOfRemoteGames = [
+            Game(id: 13, name: "Game 13", imageId: nil),
+            Game(id: 14, name: "Game 14", imageId: nil),
+            Game(id: 15, name: "Game 15", imageId: nil),
+            Game(id: 16, name: "Game 16", imageId: nil),
+            Game(id: 17, name: "Game 17", imageId: nil),
+            Game(id: 18, name: "Game 18", imageId: nil),
+            Game(id: 19, name: "Game 19", imageId: nil),
+            Game(id: 20, name: "Game 20", imageId: nil),
+            Game(id: 21, name: "Game 21", imageId: nil)
+        ]
+        remoteGamesProvider.stub = .success(secondBatchOfRemoteGames)
         
-        XCTAssertEqual(secondPage.games.map(\.id), (cachedGames + remoteGames).map(\.id))
+        let secondPage = try await firstPage.loadMore!()
+    
+        XCTAssertEqual(secondPage.games.map(\.id), (cachedGames + firstBatchOfRemoteGames + secondBatchOfRemoteGames).map(\.id))
     }
 }
 
