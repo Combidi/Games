@@ -41,6 +41,26 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
+    
+    func test_getGames_withGamesCacheError_deliversGamesFromRemote() async throws {
+        
+        let cache = Cache(stub: .failure(NSError(domain: "", code: 1)))
+        let remoteGamesProvider = RemoteGamesProviderStub()
+        let gamesFromRemote = [
+            Game(id: 1, name: "Game 1", imageId: nil),
+            Game(id: 2, name: "Game 2", imageId: nil)
+        ]
+        remoteGamesProvider.stub = .success(gamesFromRemote)
+        
+        let sut = makeLocalWithRemoteFallbackGamesProvider(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
+        
+        let loadedGames = try await sut.getGames().games
+        
+        XCTAssertEqual(loadedGames, gamesFromRemote)
+    }
 
     func test_getGames_withNonEmptyGamesCache_deliversGamesFromCache() async throws {
         
