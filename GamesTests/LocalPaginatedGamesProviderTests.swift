@@ -75,7 +75,7 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
             cache: cache,
             loadMore: { offset in
                 capturedOffset = offset
-                return PaginatedGames(games: cachedGames + additionalGames, loadMore: nil)
+                return PaginatedGames(games: additionalGames, loadMore: nil)
             }
         )
         let firstPage = try sut.getGames()
