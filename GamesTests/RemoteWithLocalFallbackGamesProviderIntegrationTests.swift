@@ -12,7 +12,7 @@ private func makeLocalWithRemoteFallbackGamesProvider(
     PrimaryWithFallbackPaginatedGamesProvider(
         primaryProvider: LocalPaginatedGamesProvider(
             cache: cache,
-            loadMore: { _ in  PaginatedGames(games: [], loadMore: nil) }
+            loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
         ),
         fallbackProvider: RemotePaginatedGamesProvider(
             remoteGamesProvider: remoteGamesProvider
@@ -22,7 +22,7 @@ private func makeLocalWithRemoteFallbackGamesProvider(
 
 final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
     
-    func test_getGames_withEmptyGamesCache_reliversGamesFromRemote() async throws {
+    func test_getGames_withEmptyGamesCache_deliversGamesFromRemote() async throws {
         
         let cache = Cache(stub: .success([]))
         let remoteGamesProvider = RemoteGamesProviderStub()
@@ -42,7 +42,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
 
-    func test_getGames_withNonEmptyGamesCache_reliversGamesFromCache() async throws {
+    func test_getGames_withNonEmptyGamesCache_deliversGamesFromCache() async throws {
         
         let cachedGames = [
             Game(id: 1, name: "Game 1", imageId: nil),
