@@ -9,13 +9,21 @@ private func makeLocalWithRemoteFallbackGamesProvider(
     cache: GameCacheRetrievable,
     remoteGamesProvider: RemoteGamesProviderStub
 ) -> PaginatedGamesProvider {
-    RemotePaginatedGamesProvider(remoteGamesProvider: remoteGamesProvider)
+    PrimaryWithFallbackPaginatedGamesProvider(
+        primaryProvider: LocalPaginatedGamesProvider(
+            cache: cache,
+            loadMore: { _ in  PaginatedGames(games: [], loadMore: nil) }
+        ),
+        fallbackProvider: RemotePaginatedGamesProvider(
+            remoteGamesProvider: remoteGamesProvider
+        )
+    )
 }
 
 final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
     
     func test_getGames_withEmptyGamesCache_reliversGamesFromRemote() async throws {
-
+        
         let cache = Cache(stub: .success([]))
         let remoteGamesProvider = RemoteGamesProviderStub()
         let gamesFromRemote = [
@@ -24,11 +32,32 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         ]
         remoteGamesProvider.stub = .success(gamesFromRemote)
         
-        let sut = makeLocalWithRemoteFallbackGamesProvider(cache: cache, remoteGamesProvider: remoteGamesProvider)
+        let sut = makeLocalWithRemoteFallbackGamesProvider(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
         
         let loadedGames = try await sut.getGames().games
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
+    }
+
+    func test_getGames_withNonEmptyGamesCache_reliversGamesFromCache() async throws {
+        
+        let cachedGames = [
+            Game(id: 1, name: "Game 1", imageId: nil),
+            Game(id: 2, name: "Game 2", imageId: nil)
+        ]
+        let cache = Cache(stub: .success(cachedGames))
+        
+        let sut = makeLocalWithRemoteFallbackGamesProvider(
+            cache: cache,
+            remoteGamesProvider: RemoteGamesProviderStub()
+        )
+        
+        let loadedGames = try await sut.getGames().games
+        
+        XCTAssertEqual(loadedGames, cachedGames)
     }
 }
 
