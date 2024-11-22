@@ -12,7 +12,13 @@ private func makeLocalWithRemoteFallbackGamesProvider(
     PrimaryWithFallbackPaginatedGamesProvider(
         primaryProvider: LocalPaginatedGamesProvider(
             cache: cache,
-            loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
+            loadMore: { offset in
+                let remoteLoader = RemotePaginatedGamesProvider(
+                    startOffset: offset,
+                    remoteGamesProvider: remoteGamesProvider
+                )
+                return try await remoteLoader.getGames()
+            }
         ),
         fallbackProvider: CachingPaginatedGamesProviderDecorator(
             provider: RemotePaginatedGamesProvider(
@@ -102,6 +108,41 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         let cachedGames = try cache.retrieveGames()
         
         XCTAssertEqual(cachedGames, remoteGames)
+    }
+    
+    func test_loadMore_withNonEmptyGameCache_deliversAccumulatedGamesFromCacheAndRemote() async throws {
+        
+        let cachedGames = [
+            Game(id: 1, name: "Game 1", imageId: nil),
+            Game(id: 2, name: "Game 2", imageId: nil)
+        ]
+        let cache = Cache(stub: .success(cachedGames))
+        let remoteGames = [
+            Game(id: 3, name: "Game 3", imageId: nil),
+            Game(id: 4, name: "Game 4", imageId: nil),
+            Game(id: 5, name: "Game 5", imageId: nil),
+            Game(id: 6, name: "Game 6", imageId: nil),
+            Game(id: 7, name: "Game 7", imageId: nil),
+            Game(id: 8, name: "Game 8", imageId: nil),
+            Game(id: 9, name: "Game 9", imageId: nil),
+            Game(id: 10, name: "Game 10", imageId: nil),
+            Game(id: 11, name: "Game 11", imageId: nil),
+            Game(id: 12, name: "Game 12", imageId: nil)
+        ]
+        let remoteGamesProvider = RemoteGamesProviderStub()
+        remoteGamesProvider.stub = .success(remoteGames)
+        
+        let sut = makeLocalWithRemoteFallbackGamesProvider(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
+        
+        let firstPage = try await sut.getGames()
+        
+        let loadMore = try XCTUnwrap(firstPage.loadMore)
+        let secondPage = try await loadMore()
+        
+        XCTAssertEqual(secondPage.games.map(\.id), (cachedGames + remoteGames).map(\.id))
     }
 }
 
