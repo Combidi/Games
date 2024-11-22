@@ -6,7 +6,7 @@ import XCTest
 @testable import Games
 
 private func makeLocalWithRemoteFallbackGamesProvider(
-    cache: GameCacheRetrievable,
+    cache: GameCacheRetrievable & GameCacheStorable,
     remoteGamesProvider: RemoteGamesProviderStub
 ) -> PaginatedGamesProvider {
     PrimaryWithFallbackPaginatedGamesProvider(
@@ -14,8 +14,11 @@ private func makeLocalWithRemoteFallbackGamesProvider(
             cache: cache,
             loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
         ),
-        fallbackProvider: RemotePaginatedGamesProvider(
-            remoteGamesProvider: remoteGamesProvider
+        fallbackProvider: CachingPaginatedGamesProviderDecorator(
+            provider: RemotePaginatedGamesProvider(
+                remoteGamesProvider: remoteGamesProvider
+            ),
+            storage: cache
         )
     )
 }
@@ -61,7 +64,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
-
+    
     func test_getGames_withNonEmptyGamesCache_deliversGamesFromCache() async throws {
         
         let cachedGames = [
@@ -79,20 +82,45 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         
         XCTAssertEqual(loadedGames, cachedGames)
     }
+    
+    func test_getGames_cachesGamesReceivedFromRemote() async throws {
+        
+        let cache = Cache(stub: .success(nil))
+        let remoteGamesProvider = RemoteGamesProviderStub()
+        let sut = makeLocalWithRemoteFallbackGamesProvider(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
+        let remoteGames = [
+            Game(id: 1, name: "Game 1", imageId: nil),
+            Game(id: 2, name: "Game 2", imageId: nil)
+        ]
+        remoteGamesProvider.stub = .success(remoteGames)
+        
+        _ = try await sut.getGames().games
+        
+        let cachedGames = try cache.retrieveGames()
+        
+        XCTAssertEqual(cachedGames, remoteGames)
+    }
 }
 
 // MARK: - Helpers
 
-private struct Cache: GameCacheRetrievable {
-        
-    private let stub: Result<[Game]?, Error>
-    
+private final class Cache: GameCacheRetrievable, GameCacheStorable {
+            
+    private var stub: Result<[Game]?, Error>
+       
     init(stub: Result<[Game]?, Error>) {
         self.stub = stub
     }
     
     func retrieveGames() throws -> [Game]? {
         try stub.get()
+    }
+    
+    func store(games: [Game]) throws {
+        self.stub = .success(games)
     }
 }
 
