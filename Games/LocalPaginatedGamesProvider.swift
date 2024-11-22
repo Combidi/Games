@@ -22,7 +22,7 @@ struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
     
     func getGames() throws -> PaginatedGames {
         let games = try cache.retrieveGames()
-        guard let games else { throw MissingGamesError() }
+        guard let games, !games.isEmpty else { throw MissingGamesError() }
         return PaginatedGames(games: games, loadMore: {
             try await loadMore(games.count)
         })
