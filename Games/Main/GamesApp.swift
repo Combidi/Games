@@ -58,11 +58,11 @@ struct GamesApp: App {
                 loadGames: loadGames,
                 reloadGames: reloadGames
             ),
-            makeGameView: makeGameView
+            makeGameView: makeGameListItemView
         )
     }
     
-    private func makeGameView(game: Game) -> some View {
+    private func makeGameListItemView(game: Game) -> some View {
         NavigationLink(value: game) {
             GameListItemView(
                 imageUrl: imageUrl(for: game.imageId),
