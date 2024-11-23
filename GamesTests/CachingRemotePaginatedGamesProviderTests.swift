@@ -103,7 +103,6 @@ final class CachingRemotePaginatedGamesProviderTests: XCTestCase {
             remoteGamesProvider: remoteGamesProvider
         )
         .makeLocalWithCachingRemotePaginatedGamesProvider()
-
                 
         let firstPage = try await getGames()
         
@@ -156,6 +155,63 @@ final class CachingRemotePaginatedGamesProviderTests: XCTestCase {
         XCTAssertEqual(fourthPage.games.map(\.id), (cachedGames + firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
         
         XCTAssertNil(fourthPage.loadMore, "Expected no load more when the last page has been loaded")
+    }
+    
+    func test_loadMore_storesAccumulatedGamesInCache() async throws {
+        
+        let cache = Cache(stub: .success([]))
+        let remoteGamesProvider = RemoteGamesProviderStub()
+        let getGames = PaginatedGamesProviderAssembler(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
+        .makeLocalWithCachingRemotePaginatedGamesProvider()
+                
+        let firstBatchOfRemoteGames = [
+            makeGame(id: 3),
+            makeGame(id: 4),
+            makeGame(id: 5),
+            makeGame(id: 6),
+            makeGame(id: 7),
+            makeGame(id: 8),
+            makeGame(id: 9),
+            makeGame(id: 10),
+            makeGame(id: 11),
+            makeGame(id: 12)
+        ]
+        remoteGamesProvider.stub = .success(firstBatchOfRemoteGames)
+
+        let firstPage = try await getGames()
+                
+        XCTAssertEqual(try cache.retrieveGames().map(\.id), firstBatchOfRemoteGames.map(\.id))
+
+        let secondBatchOfRemoteGames = [
+            makeGame(id: 13),
+            makeGame(id: 14),
+            makeGame(id: 15),
+            makeGame(id: 16),
+            makeGame(id: 17),
+            makeGame(id: 18),
+            makeGame(id: 19),
+            makeGame(id: 20),
+            makeGame(id: 21),
+            makeGame(id: 22),
+        ]
+        remoteGamesProvider.stub = .success(secondBatchOfRemoteGames)
+        
+        let secondPage = try await firstPage.loadMore!()
+        
+        XCTAssertEqual(try cache.retrieveGames().map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames).map(\.id))
+                
+        let thirdBatchOfRemoteGames = [
+            makeGame(id: 23),
+            makeGame(id: 24)
+        ]
+        remoteGamesProvider.stub = .success(thirdBatchOfRemoteGames)
+
+        _ = try await secondPage.loadMore!()
+        
+        XCTAssertEqual(try cache.retrieveGames().map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
     }
 }
 
