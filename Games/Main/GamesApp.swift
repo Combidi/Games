@@ -4,14 +4,14 @@
 
 import SwiftUI
 
-let session = URLSession(configuration: .ephemeral)
-let client = UrlSessionHttpClient(session: session)
-let authenticatedClient = BearerAuthenticatedHttpClient(
+private let session = URLSession(configuration: .ephemeral)
+private let client = UrlSessionHttpClient(session: session)
+private let authenticatedClient = BearerAuthenticatedHttpClient(
     httpClient: client,
     clientId: clientId,
     bearerToken: bearerToken
 )
-
+private let remoteGamesProvider = IgdbRemoteGamesProvider(client: authenticatedClient)
 private let cache: GamesCache = {
     guard let storeUrl = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.appendingPathComponent("CachedGames") else {
         assertionFailure("Failed to find caches directory required for the CodableGamesStore.")
@@ -19,9 +19,6 @@ private let cache: GamesCache = {
     }
     return CodableGamesStore(storeUrl: storeUrl)
 }()
-
-private let remoteGamesProvider = IgdbRemoteGamesProvider(client: authenticatedClient)
-
 private let assembler = PaginatedGamesProviderAssembler(
     cache: cache,
     remoteGamesProvider: remoteGamesProvider

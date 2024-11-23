@@ -88,14 +88,14 @@ final class PaginatedGameListViewModelTests: XCTestCase {
     func test_loadMore_loadsMoreUntilEverythingIsLoaded() async throws {
         
         loader.loadGamesStub = .success([
-            Game(id: 0, name: "game 0", imageId: "0"),
-            Game(id: 1, name: "game 1", imageId: "1")
+            makeGame(id: 1),
+            makeGame(id: 2)
         ])
         loader.loadMoreGamesStub = [
             .failure(NSError(domain: "any", code: 0)),
             .success([
-                Game(id: 2, name: "game 2", imageId: "2"),
-                Game(id: 3, name: "game 3", imageId: "3")
+                makeGame(id: 3),
+                makeGame(id: 4)
             ])
         ]
         
@@ -104,8 +104,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                Game(id: 0, name: "game 0", imageId: "0"),
-                Game(id: 1, name: "game 1", imageId: "1")
+                makeGame(id: 0),
+                makeGame(id: 1)
             ],
             "Expected to loaded games to be presented"
         )
@@ -115,8 +115,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                Game(id: 0, name: "game 0", imageId: "0"),
-                Game(id: 1, name: "game 1", imageId: "1"),
+                makeGame(id: 0),
+                makeGame(id: 1)
             ],
             "Expected presentation state not to be altered after load more failure"
         )
@@ -126,10 +126,10 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                Game(id: 0, name: "game 0", imageId: "0"),
-                Game(id: 1, name: "game 1", imageId: "1"),
-                Game(id: 2, name: "game 2", imageId: "2"),
-                Game(id: 3, name: "game 3", imageId: "3")
+                makeGame(id: 0),
+                makeGame(id: 1)
+                makeGame(id: 2),
+                makeGame(id: 3)
             ],
             "Expected to present all games after successfull load more"
         )
@@ -168,7 +168,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
             "Expected error state on loading failure"
         )
 
-        let game = Game(id: 0, name: "Nice game", imageId: nil)
+        let game = makeGame(id: 0)
         loader.reloadGamesStub = .success([game])
         
         await sut.reload()
@@ -183,14 +183,14 @@ final class PaginatedGameListViewModelTests: XCTestCase {
     func test_reload_loadMore_loadsMoreUntilEverythingIsLoaded() async throws {
         
         loader.reloadGamesStub = .success([
-            Game(id: 0, name: "game 0", imageId: "0"),
-            Game(id: 1, name: "game 1", imageId: "1")
+            makeGame(id: 0),
+            makeGame(id: 1),
         ])
         loader.loadMoreGamesStub = [
             .failure(NSError(domain: "any", code: 0)),
             .success([
-                Game(id: 2, name: "game 2", imageId: "2"),
-                Game(id: 3, name: "game 3", imageId: "3")
+                makeGame(id: 2),
+                makeGame(id: 3)
             ])
         ]
         
@@ -199,8 +199,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                Game(id: 0, name: "game 0", imageId: "0"),
-                Game(id: 1, name: "game 1", imageId: "1")
+                makeGame(id: 0),
+                makeGame(id: 1),
             ],
             "Expected to loaded games to be presented"
         )
@@ -210,8 +210,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                Game(id: 0, name: "game 0", imageId: "0"),
-                Game(id: 1, name: "game 1", imageId: "1"),
+                makeGame(id: 0),
+                makeGame(id: 1),
             ],
             "Expected presentation state not to be altered after load more failure"
         )
@@ -221,10 +221,10 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                Game(id: 0, name: "game 0", imageId: "0"),
-                Game(id: 1, name: "game 1", imageId: "1"),
-                Game(id: 2, name: "game 2", imageId: "2"),
-                Game(id: 3, name: "game 3", imageId: "3")
+                makeGame(id: 0),
+                makeGame(id: 1),
+                makeGame(id: 2),
+                makeGame(id: 3)
             ],
             "Expected to present all games after successfull load more"
         )

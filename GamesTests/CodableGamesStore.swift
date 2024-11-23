@@ -27,7 +27,7 @@ final class CodableGamesStoreTests: XCTestCase {
     
     func test_retrieveGames_test_deliversFoundValuesOnNonEmptyCache() throws {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
-        let games = [Game(id: 1, name: "nice game", imageId: nil)]
+        let games = [makeGame(id: 1)]
         
         try sut.store(games: games)
         
@@ -46,14 +46,14 @@ final class CodableGamesStoreTests: XCTestCase {
     
     func test_storeGames_deliversNoErrorOnEmptyCache() {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
-        let games = [Game(id: 1, name: "nice game", imageId: nil)]
+        let games = [makeGame(id: 1)]
 
         XCTAssertNoThrow(try sut.store(games: games))
     }
 
     func test_storeGames_deliversNoErrorOnNonEmptyCache() {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
-        let games = [Game(id: 1, name: "nice game", imageId: nil)]
+        let games = [makeGame(id: 1)]
 
         XCTAssertNoThrow(try sut.store(games: games))
         XCTAssertNoThrow(try sut.store(games: games))
@@ -61,11 +61,11 @@ final class CodableGamesStoreTests: XCTestCase {
     
     func test_storeGames_overridesPreviouslyInsertedCacheValues() throws {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
-        let firstGame = Game(id: 1, name: "nice game", imageId: nil)
+        let firstGame = makeGame(id: 1)
 
         try sut.store(games: [firstGame])
         
-        let secondGame = Game(id: 2, name: "even nicer game", imageId: nil)
+        let secondGame = makeGame(id: 2)
         try sut.store(games: [secondGame])
 
         XCTAssertEqual(try sut.retrieveGames(), [secondGame])
@@ -75,13 +75,13 @@ final class CodableGamesStoreTests: XCTestCase {
         let invalidStoreURL = URL(string: "invalid://store-url")!
         let sut = CodableGamesStore(storeUrl: invalidStoreURL)
 
-        XCTAssertThrowsError(try sut.store(games: [Game(id: 1, name: "nice game", imageId: nil)]))
+        XCTAssertThrowsError(try sut.store(games: [makeGame()]))
     }
     
     func test_storedGames_persistsBetweenSessions() throws {
         let games = [
-            Game(id: 1, name: "nice game", imageId: nil),
-            Game(id: 2, name: "even nicer game", imageId: nil)
+            makeGame(id: 1),
+            makeGame(id: 2)
         ]
 
         let sutToInsert = CodableGamesStore(storeUrl: testSpecificStoreURL)

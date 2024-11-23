@@ -4,6 +4,6 @@
 
 @testable import Games
 
-func makeGame(id: Int) -> Game {
+func makeGame(id: Int = 0) -> Game {
     Game(id: id, name: "Game \(id)", imageId: nil)
 }
