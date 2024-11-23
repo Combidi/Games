@@ -214,9 +214,3 @@ final class CachingRemotePaginatedGamesProviderTests: XCTestCase {
         XCTAssertEqual(try cache.retrieveGames().map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
     }
 }
-
-// MARK: - Helpers
-
-private func makeGame(id: Int) -> Game {
-    Game(id: id, name: "Game \(id)", imageId: nil)
-}
