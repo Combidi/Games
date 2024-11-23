@@ -22,18 +22,6 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
         
         XCTAssertEqual(result.games, games)
     }
-    
-    func test_getGames_withoutCachedGames_deliversError() {
-        let cache = Cache(stub: .success(nil))
-        let sut = LocalPaginatedGamesProvider(
-            cache: cache,
-            loadMore: { _ in PaginatedGames(games: [], loadMore: nil) }
-        )
-
-        XCTAssertThrowsError(try sut.getGames()) { error in
-            XCTAssertTrue(error is LocalPaginatedGamesProvider.MissingGamesError)
-        }
-    }
 
     func test_getGames_withoutEmptyCachedGames_deliversError() {
         let cache = Cache(stub: .success([]))
@@ -91,13 +79,13 @@ final class LocalPaginatedGamesProviderTests: XCTestCase {
 
 private struct Cache: GameCacheRetrievable {
         
-    private let stub: Result<[Game]?, Error>
+    private let stub: Result<[Game], Error>
     
-    init(stub: Result<[Game]?, Error>) {
+    init(stub: Result<[Game], Error>) {
         self.stub = stub
     }
     
-    func retrieveGames() throws -> [Game]? {
+    func retrieveGames() throws -> [Game] {
         try stub.get()
     }
 }

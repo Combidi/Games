@@ -19,10 +19,10 @@ final class CodableGamesStoreTests: XCTestCase {
         try? FileManager.default.removeItem(at: testSpecificStoreURL)
     }
     
-    func test_retrieveGames_deliversNilOnEmptyCache() {
+    func test_retrieveGames_deliversEmptyGamesOnEmptyCache() {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
     
-        XCTAssertNil(try! sut.retrieveGames())
+        XCTAssertEqual(try! sut.retrieveGames(), [])
     }
     
     func test_retrieveGames_test_deliversFoundValuesOnNonEmptyCache() throws {

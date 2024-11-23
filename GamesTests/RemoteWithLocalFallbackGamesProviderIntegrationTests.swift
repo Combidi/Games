@@ -20,8 +20,7 @@ private struct PaginatedGamesProviderAssembler {
     
     func makeLocalWithRemoteFallbackGamesProvider() -> PaginatedGamesProvider {
         {
-            let cachedGames = (try? cache.retrieveGames() ?? []) ?? []
-            if cachedGames.isEmpty {
+            guard let cachedGames = try? cache.retrieveGames(), !cachedGames.isEmpty else {
                 return try await loadMore(currentGames: [])
             }
             return PaginatedGames(
@@ -112,7 +111,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
     
     func test_getGames_cachesGamesReceivedFromRemote() async throws {
         
-        let cache = Cache(stub: .success(nil))
+        let cache = Cache(stub: .success([]))
         let remoteGamesProvider = RemoteGamesProviderStub()
         let getGames = PaginatedGamesProviderAssembler(
             cache: cache,
@@ -203,13 +202,13 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
 
 private final class Cache: GameCacheRetrievable, GameCacheStorable {
             
-    private var stub: Result<[Game]?, Error>
+    private var stub: Result<[Game], Error>
        
-    init(stub: Result<[Game]?, Error>) {
+    init(stub: Result<[Game], Error>) {
         self.stub = stub
     }
     
-    func retrieveGames() throws -> [Game]? {
+    func retrieveGames() throws -> [Game] {
         try stub.get()
     }
     

@@ -18,8 +18,8 @@ struct CodableGamesStore: GameCacheRetrievable, GameCacheStorable {
         self.storeUrl = storeUrl
     }
     
-    func retrieveGames() throws -> [Game]? {
-        guard let data = try? Data(contentsOf: storeUrl) else { return nil }
+    func retrieveGames() throws -> [Game] {
+        guard let data = try? Data(contentsOf: storeUrl) else { return [] }
         let codableGames = try JSONDecoder().decode([CodableGame].self, from: data)
         let games = codableGames.map {
             Game(id: $0.id, name: $0.name, imageId: $0.imageId)

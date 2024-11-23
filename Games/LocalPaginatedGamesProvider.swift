@@ -3,7 +3,7 @@
 //
 
 protocol GameCacheRetrievable {
-    func retrieveGames() throws -> [Game]?
+    func retrieveGames() throws -> [Game]
 }
 
 struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
@@ -22,7 +22,7 @@ struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
     
     func getGames() throws -> PaginatedGames {
         let games = try cache.retrieveGames()
-        guard let games, !games.isEmpty else { throw MissingGamesError() }
+        guard !games.isEmpty else { throw MissingGamesError() }
         return PaginatedGames(games: games, loadMore: {
             let nextPage = try await loadMore(games.count)
             return PaginatedGames(games: games + nextPage.games, loadMore: nextPage.loadMore)
