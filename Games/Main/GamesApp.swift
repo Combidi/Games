@@ -33,30 +33,24 @@ struct GamesApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                makeGameListView(
-                    loadGames: assembler.makeLocalWithCachingRemotePaginatedGamesProvider(),
-                    reloadGames: assembler.makeCachingRemotePaginatedGamesProvider()
-                )
-                .navigationTitle("Games")
-                .navigationDestination(
-                    for: Game.self,
-                    destination: { game in
-                        makeGameDetailView(game: game)
-                            .navigationTitle(game.name)
-                    }
-                )
+                gameListView
+                    .navigationTitle("Games")
+                    .navigationDestination(
+                        for: Game.self,
+                        destination: { game in
+                            makeGameDetailView(game: game)
+                                .navigationTitle(game.name)
+                        }
+                    )
             }
         }
     }
     
-    func makeGameListView(
-        loadGames: @escaping () async throws -> PaginatedGames,
-        reloadGames: @escaping () async throws -> PaginatedGames
-    ) -> some View {
+    private var gameListView: some View {
         PaginatedGamesView(
             viewModel: PaginatedGameListViewModel(
-                loadGames: loadGames,
-                reloadGames: reloadGames
+                loadGames: assembler.makeLocalWithCachingRemotePaginatedGamesProvider(),
+                reloadGames: assembler.makeCachingRemotePaginatedGamesProvider()
             ),
             makeGameView: makeGameListItemView
         )
