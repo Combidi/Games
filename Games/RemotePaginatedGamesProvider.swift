@@ -4,19 +4,14 @@
 
 struct RemotePaginatedGamesProvider: PaginatedGamesProvider {
         
-    private let startOffset: Int
     private let remoteGamesProvider: RemoteGamesProvider
     
-    init(
-        startOffset: Int = 0,
-        remoteGamesProvider: RemoteGamesProvider
-    ) {
-        self.startOffset = startOffset
+    init(remoteGamesProvider: RemoteGamesProvider) {
         self.remoteGamesProvider = remoteGamesProvider
     }
     
     func getGames() async throws -> PaginatedGames {
-        let games = try await remoteGamesProvider.getGames(limit: 10, offset: startOffset)
+        let games = try await remoteGamesProvider.getGames(limit: 10, offset: 0)
         return PaginatedGames(games: games, loadMore: makeRemoteLoadMoreLoader(currentGames: games))
     }
     
@@ -24,7 +19,7 @@ struct RemotePaginatedGamesProvider: PaginatedGamesProvider {
         return {
             let nextBatchOfGames = try await remoteGamesProvider.getGames(
                 limit: 10,
-                offset: currentGames.count + startOffset
+                offset: currentGames.count
             )
             let reachedEnd = nextBatchOfGames.count != 10
             let games = currentGames + nextBatchOfGames

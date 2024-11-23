@@ -15,18 +15,6 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
         
         XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 0)])
     }
-
-    func test_getGames_withStartOffset_requestsGamesStartingFromGivenOffset() async throws {
-        let remoteGamesProvider = RemoteGamesProviderSpy()
-        let sut = RemotePaginatedGamesProvider(
-            startOffset: 30,
-            remoteGamesProvider: remoteGamesProvider
-        )
-        
-        _ = try await sut.getGames()
-        
-        XCTAssertEqual(remoteGamesProvider.capturedMessages, [.init(limit: 10, offset: 30)])
-    }
     
     func test_getGames_deliversErrorOnRemoteLoaderError() async throws {
         let remoteGamesProvider = RemoteGamesProviderSpy()
@@ -81,45 +69,6 @@ final class RemotePaginatedGamesProviderTests: XCTestCase {
                 .init(limit: 10, offset: 0),
                 .init(limit: 10, offset: 10),
                 .init(limit: 10, offset: 20)
-            ]
-        )
-    }
-    
-    func test_loadMore_withStartOffset_loadsNextPageFromRemoteLoader() async throws {
-        let remoteGamesProvider = RemoteGamesProviderSpy()
-        let sut = RemotePaginatedGamesProvider(
-            startOffset: 15,
-            remoteGamesProvider: remoteGamesProvider
-        )
-        remoteGamesProvider.stub = .success(Array(repeating: Game(id: 0, name: "any", imageId: nil), count: 10))
-        
-        let firstPage = try await sut.getGames()
-
-        XCTAssertEqual(
-            remoteGamesProvider.capturedMessages,
-            [
-                .init(limit: 10, offset: 15)
-            ]
-        )
-
-        let secondPage = try await firstPage.loadMore!()
-        
-        XCTAssertEqual(
-            remoteGamesProvider.capturedMessages,
-            [
-                .init(limit: 10, offset: 15),
-                .init(limit: 10, offset: 25),
-            ]
-        )
-
-        let _ = try await secondPage.loadMore!()
-
-        XCTAssertEqual(
-            remoteGamesProvider.capturedMessages,
-            [
-                .init(limit: 10, offset: 15),
-                .init(limit: 10, offset: 25),
-                .init(limit: 10, offset: 35)
             ]
         )
     }
