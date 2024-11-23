@@ -15,7 +15,7 @@ let authenticatedClient = BearerAuthenticatedHttpClient(
 private let cache: GamesCache = {
     guard let storeUrl = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.appendingPathComponent("CachedGames") else {
         assertionFailure("Failed to find caches directory required for the CodableGamesStore.")
-        fatalError()
+        return NullGameStore()
     }
     return CodableGamesStore(storeUrl: storeUrl)
 }()
