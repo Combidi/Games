@@ -13,12 +13,15 @@ private struct PaginatedGamesProviderAssembler {
     private let remoteGamesProvider: RemoteGamesProviderStub
     private let pageSize = 10
 
-    init(cache: GameCacheRetrievable & GameCacheStorable, remoteGamesProvider: RemoteGamesProviderStub) {
+    init(
+        cache: GameCacheRetrievable & GameCacheStorable,
+        remoteGamesProvider: RemoteGamesProviderStub
+    ) {
         self.cache = cache
         self.remoteGamesProvider = remoteGamesProvider
     }
     
-    func makeLocalWithRemoteFallbackGamesProvider() -> PaginatedGamesProvider {
+    func makeCachingRemotePaginatedGamesProvider() -> PaginatedGamesProvider {
         {
             guard let cachedGames = try? cache.retrieveGames(), !cachedGames.isEmpty else {
                 return try await loadMore(currentGames: [])
@@ -62,7 +65,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-            .makeLocalWithRemoteFallbackGamesProvider()
+        .makeCachingRemotePaginatedGamesProvider()
         
         let loadedGames = try await getGames().games
         
@@ -83,7 +86,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-            .makeLocalWithRemoteFallbackGamesProvider()
+        .makeCachingRemotePaginatedGamesProvider()
         
         let loadedGames = try await getGames().games
         
@@ -102,8 +105,8 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: RemoteGamesProviderStub()
         )
-            .makeLocalWithRemoteFallbackGamesProvider()
-        
+        .makeCachingRemotePaginatedGamesProvider()
+
         let loadedGames = try await getGames().games
         
         XCTAssertEqual(loadedGames, cachedGames)
@@ -117,7 +120,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-            .makeLocalWithRemoteFallbackGamesProvider()
+        .makeCachingRemotePaginatedGamesProvider()
         let remoteGames = [
             Game(id: 1, name: "Game 1", imageId: nil),
             Game(id: 2, name: "Game 2", imageId: nil)
@@ -142,7 +145,9 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         let getGames = PaginatedGamesProviderAssembler(
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
-        ).makeLocalWithRemoteFallbackGamesProvider()
+        )
+        .makeCachingRemotePaginatedGamesProvider()
+
                 
         let firstPage = try await getGames()
         
