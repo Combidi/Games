@@ -2,10 +2,6 @@
 //  Created by Peter Combee on 19/11/2024.
 //
 
-protocol GameCacheStorable {
-    func store(games: [Game]) throws
-}
-
 struct CachingPaginatedGamesProviderDecorator: PaginatedGamesProvider {
     
     private let provider: PaginatedGamesProvider
