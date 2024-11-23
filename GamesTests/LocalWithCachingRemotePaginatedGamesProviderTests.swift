@@ -6,7 +6,7 @@ import XCTest
 @testable import Games
  
 final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
-
+    
     func test_getGames_withEmptyGamesCache_deliversGamesFromRemote() async throws {
         
         let cache = Cache(stub: .success([]))
@@ -21,7 +21,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
+            .makeCachingRemotePaginatedGamesProvider()
         
         let loadedGames = try await getGames().games
         
@@ -42,7 +42,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
+            .makeCachingRemotePaginatedGamesProvider()
         
         let loadedGames = try await getGames().games
         
@@ -62,8 +62,8 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
-
+            .makeCachingRemotePaginatedGamesProvider()
+        
         let loadedGames = try await getGames().games
         
         XCTAssertEqual(loadedGames, remoteGames)
@@ -77,7 +77,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
+            .makeCachingRemotePaginatedGamesProvider()
         let remoteGames = [
             makeGame(id: 1),
             makeGame(id: 2)
@@ -98,8 +98,8 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
             cache: Cache(stub: .success([])),
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
-                
+            .makeCachingRemotePaginatedGamesProvider()
+        
         let firstBatchOfRemoteGames = [
             makeGame(id: 3),
             makeGame(id: 4),
@@ -113,11 +113,11 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
             makeGame(id: 12)
         ]
         remoteGamesProvider.stub = .success(firstBatchOfRemoteGames)
-
+        
         let firstPage = try await getGames()
         
         XCTAssertEqual(firstPage.games.map(\.id), firstBatchOfRemoteGames.map(\.id))
-
+        
         let secondBatchOfRemoteGames = [
             makeGame(id: 13),
             makeGame(id: 14),
@@ -135,6 +135,65 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         let secondPage = try await firstPage.loadMore!()
         
         XCTAssertEqual(secondPage.games.map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames).map(\.id))
+        
+        let thirdBatchOfRemoteGames = [
+            makeGame(id: 23),
+            makeGame(id: 24)
+        ]
+        remoteGamesProvider.stub = .success(thirdBatchOfRemoteGames)
+        
+        let thirdPage = try await secondPage.loadMore!()
+        
+        XCTAssertEqual(thirdPage.games.map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
+        
+        XCTAssertNil(thirdPage.loadMore, "Expected no load more when the last page has been loaded")
+    }
+
+    func test_loadMore_storesAccumulatedGamesInCache() async throws {
+        
+        let cache = Cache(stub: .success([]))
+        let remoteGamesProvider = RemoteGamesProviderStub()
+        let getGames = PaginatedGamesProviderAssembler(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
+        .makeCachingRemotePaginatedGamesProvider()
+                
+        let firstBatchOfRemoteGames = [
+            makeGame(id: 3),
+            makeGame(id: 4),
+            makeGame(id: 5),
+            makeGame(id: 6),
+            makeGame(id: 7),
+            makeGame(id: 8),
+            makeGame(id: 9),
+            makeGame(id: 10),
+            makeGame(id: 11),
+            makeGame(id: 12)
+        ]
+        remoteGamesProvider.stub = .success(firstBatchOfRemoteGames)
+
+        let firstPage = try await getGames()
+                
+        XCTAssertEqual(try cache.retrieveGames().map(\.id), firstBatchOfRemoteGames.map(\.id))
+
+        let secondBatchOfRemoteGames = [
+            makeGame(id: 13),
+            makeGame(id: 14),
+            makeGame(id: 15),
+            makeGame(id: 16),
+            makeGame(id: 17),
+            makeGame(id: 18),
+            makeGame(id: 19),
+            makeGame(id: 20),
+            makeGame(id: 21),
+            makeGame(id: 22),
+        ]
+        remoteGamesProvider.stub = .success(secondBatchOfRemoteGames)
+        
+        let secondPage = try await firstPage.loadMore!()
+        
+        XCTAssertEqual(try cache.retrieveGames().map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames).map(\.id))
                 
         let thirdBatchOfRemoteGames = [
             makeGame(id: 23),
@@ -142,11 +201,9 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         ]
         remoteGamesProvider.stub = .success(thirdBatchOfRemoteGames)
 
-        let thirdPage = try await secondPage.loadMore!()
+        _ = try await secondPage.loadMore!()
         
-        XCTAssertEqual(thirdPage.games.map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
-
-        XCTAssertNil(thirdPage.loadMore, "Expected no load more when the last page has been loaded")
+        XCTAssertEqual(try cache.retrieveGames().map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
     }
 }
 
