@@ -4,12 +4,12 @@
 
 struct PaginatedGamesProviderAssembler {
     
-    private let cache: GameCacheRetrievable & GameCacheStorable
+    private let cache: GamesCache
     private let remoteGamesProvider: RemoteGamesProvider
     private let pageSize = 10
 
     init(
-        cache: GameCacheRetrievable & GameCacheStorable,
+        cache: GamesCache,
         remoteGamesProvider: RemoteGamesProvider
     ) {
         self.cache = cache

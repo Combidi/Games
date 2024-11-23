@@ -165,7 +165,7 @@ private func makeGame(id: Int) -> Game {
     Game(id: id, name: "Game \(id)", imageId: nil)
 }
 
-private final class Cache: GameCacheRetrievable, GameCacheStorable {
+private final class Cache: GamesCache {
             
     private var stub: Result<[Game], Error>
        

@@ -4,7 +4,7 @@
 
 import Foundation
 
-struct CodableGamesStore: GameCacheRetrievable, GameCacheStorable {
+struct CodableGamesStore: GamesCache {
         
     private struct CodableGame: Codable {
         let id: Int
