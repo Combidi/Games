@@ -27,6 +27,10 @@ struct PaginatedGamesProviderAssembler {
             )
         }
     }
+    
+    func makeCachingRemotePaginatedGamesProvider() -> PaginatedGamesProvider {
+        { try await loadMore(currentGames: []) }
+    }
 
     private func loadMore(currentGames: [Game]) async throws -> PaginatedGames {
         let nextBatchOfGames = try await remoteGamesProvider.getGames(
