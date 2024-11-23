@@ -21,7 +21,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
+        .makeLocalWithCachingRemotePaginatedGamesProvider()
         
         let loadedGames = try await getGames().games
         
@@ -42,7 +42,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
+        .makeLocalWithCachingRemotePaginatedGamesProvider()
         
         let loadedGames = try await getGames().games
         
@@ -61,7 +61,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: RemoteGamesProviderStub()
         )
-        .makeCachingRemotePaginatedGamesProvider()
+        .makeLocalWithCachingRemotePaginatedGamesProvider()
 
         let loadedGames = try await getGames().games
         
@@ -76,7 +76,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
+        .makeLocalWithCachingRemotePaginatedGamesProvider()
         let remoteGames = [
             makeGame(id: 1),
             makeGame(id: 2)
@@ -102,7 +102,7 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
             cache: cache,
             remoteGamesProvider: remoteGamesProvider
         )
-        .makeCachingRemotePaginatedGamesProvider()
+        .makeLocalWithCachingRemotePaginatedGamesProvider()
 
                 
         let firstPage = try await getGames()

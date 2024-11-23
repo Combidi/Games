@@ -16,7 +16,7 @@ struct PaginatedGamesProviderAssembler {
         self.remoteGamesProvider = remoteGamesProvider
     }
     
-    func makeCachingRemotePaginatedGamesProvider() -> PaginatedGamesProvider {
+    func makeLocalWithCachingRemotePaginatedGamesProvider() -> PaginatedGamesProvider {
         {
             guard let cachedGames = try? cache.retrieveGames(), !cachedGames.isEmpty else {
                 return try await loadMore(currentGames: [])
