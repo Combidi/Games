@@ -10,12 +10,12 @@ private typealias PaginatedGamesProvider = () async throws -> PaginatedGames
 private struct PaginatedGamesProviderAssembler {
     
     private let cache: GameCacheRetrievable & GameCacheStorable
-    private let remoteGamesProvider: RemoteGamesProviderStub
+    private let remoteGamesProvider: RemoteGamesProvider
     private let pageSize = 10
 
     init(
         cache: GameCacheRetrievable & GameCacheStorable,
-        remoteGamesProvider: RemoteGamesProviderStub
+        remoteGamesProvider: RemoteGamesProvider
     ) {
         self.cache = cache
         self.remoteGamesProvider = remoteGamesProvider
