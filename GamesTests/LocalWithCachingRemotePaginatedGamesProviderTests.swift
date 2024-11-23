@@ -212,20 +212,3 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
 private func makeGame(id: Int) -> Game {
     Game(id: id, name: "Game \(id)", imageId: nil)
 }
-
-private final class GamesCacheStub: GamesCache {
-            
-    private var stub: Result<[Game], Error>
-       
-    init(stub: Result<[Game], Error>) {
-        self.stub = stub
-    }
-    
-    func retrieveGames() throws -> [Game] {
-        try stub.get()
-    }
-    
-    func store(games: [Game]) throws {
-        self.stub = .success(games)
-    }
-}
