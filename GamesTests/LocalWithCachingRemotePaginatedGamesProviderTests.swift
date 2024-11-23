@@ -5,8 +5,8 @@
 import XCTest
 @testable import Games
  
-final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
-    
+final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
+
     func test_getGames_withEmptyGamesCache_deliversGamesFromRemote() async throws {
         
         let cache = Cache(stub: .success([]))
