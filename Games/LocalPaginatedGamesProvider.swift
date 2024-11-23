@@ -2,10 +2,6 @@
 //  Created by Peter Combee on 20/11/2024.
 //
 
-protocol GameCacheRetrievable {
-    func retrieveGames() throws -> [Game]
-}
-
 struct LocalPaginatedGamesProvider: PaginatedGamesProvider {
     
     struct MissingGamesError: Error {}
