@@ -237,12 +237,3 @@ private final class Cache: GamesCache {
         self.stub = .success(games)
     }
 }
-
-private final class RemoteGamesProviderStub: RemoteGamesProvider {
-            
-    var stub: Result<[Game], Error> = .success([])
-    
-    func getGames(limit: Int, offset: Int) async throws -> [Game] {
-        return try stub.get()
-    }
-}
