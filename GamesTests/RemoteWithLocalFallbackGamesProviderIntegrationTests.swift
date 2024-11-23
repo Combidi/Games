@@ -56,8 +56,8 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         let cache = Cache(stub: .success([]))
         let remoteGamesProvider = RemoteGamesProviderStub()
         let gamesFromRemote = [
-            Game(id: 1, name: "Game 1", imageId: nil),
-            Game(id: 2, name: "Game 2", imageId: nil)
+            makeGame(id: 1),
+            makeGame(id: 2)
         ]
         remoteGamesProvider.stub = .success(gamesFromRemote)
         
@@ -77,8 +77,8 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         let cache = Cache(stub: .failure(NSError(domain: "", code: 1)))
         let remoteGamesProvider = RemoteGamesProviderStub()
         let gamesFromRemote = [
-            Game(id: 1, name: "Game 1", imageId: nil),
-            Game(id: 2, name: "Game 2", imageId: nil)
+            makeGame(id: 1),
+            makeGame(id: 2)
         ]
         remoteGamesProvider.stub = .success(gamesFromRemote)
         
@@ -96,8 +96,8 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
     func test_getGames_withNonEmptyGamesCache_deliversGamesFromCache() async throws {
         
         let cachedGames = [
-            Game(id: 1, name: "Game 1", imageId: nil),
-            Game(id: 2, name: "Game 2", imageId: nil)
+            makeGame(id: 1),
+            makeGame(id: 2)
         ]
         let cache = Cache(stub: .success(cachedGames))
         
@@ -122,8 +122,8 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         )
         .makeCachingRemotePaginatedGamesProvider()
         let remoteGames = [
-            Game(id: 1, name: "Game 1", imageId: nil),
-            Game(id: 2, name: "Game 2", imageId: nil)
+            makeGame(id: 1),
+            makeGame(id: 2)
         ]
         remoteGamesProvider.stub = .success(remoteGames)
         
@@ -137,8 +137,8 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
     func test_loadMore_withNonEmptyGameCache_deliversAccumulatedGamesFromCacheAndRemote() async throws {
         
         let cachedGames = [
-            Game(id: 1, name: "Game 1", imageId: nil),
-            Game(id: 2, name: "Game 2", imageId: nil)
+            makeGame(id: 1),
+            makeGame(id: 2)
         ]
         let cache = Cache(stub: .success(cachedGames))
         let remoteGamesProvider = RemoteGamesProviderStub()
@@ -154,16 +154,16 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         XCTAssertEqual(firstPage.games.map(\.id), cachedGames.map(\.id))
 
         let firstBatchOfRemoteGames = [
-            Game(id: 3, name: "Game 3", imageId: nil),
-            Game(id: 4, name: "Game 4", imageId: nil),
-            Game(id: 5, name: "Game 5", imageId: nil),
-            Game(id: 6, name: "Game 6", imageId: nil),
-            Game(id: 7, name: "Game 7", imageId: nil),
-            Game(id: 8, name: "Game 8", imageId: nil),
-            Game(id: 9, name: "Game 9", imageId: nil),
-            Game(id: 10, name: "Game 10", imageId: nil),
-            Game(id: 11, name: "Game 11", imageId: nil),
-            Game(id: 12, name: "Game 12", imageId: nil)
+            makeGame(id: 3),
+            makeGame(id: 4),
+            makeGame(id: 5),
+            makeGame(id: 6),
+            makeGame(id: 7),
+            makeGame(id: 8),
+            makeGame(id: 9),
+            makeGame(id: 10),
+            makeGame(id: 11),
+            makeGame(id: 12)
         ]
         remoteGamesProvider.stub = .success(firstBatchOfRemoteGames)
         
@@ -172,16 +172,16 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         XCTAssertEqual(secondPage.games.map(\.id), (cachedGames + firstBatchOfRemoteGames).map(\.id))
         
         let secondBatchOfRemoteGames = [
-            Game(id: 13, name: "Game 13", imageId: nil),
-            Game(id: 14, name: "Game 14", imageId: nil),
-            Game(id: 15, name: "Game 15", imageId: nil),
-            Game(id: 16, name: "Game 16", imageId: nil),
-            Game(id: 17, name: "Game 17", imageId: nil),
-            Game(id: 18, name: "Game 18", imageId: nil),
-            Game(id: 19, name: "Game 19", imageId: nil),
-            Game(id: 20, name: "Game 20", imageId: nil),
-            Game(id: 21, name: "Game 21", imageId: nil),
-            Game(id: 22, name: "Game 22", imageId: nil)
+            makeGame(id: 13),
+            makeGame(id: 14),
+            makeGame(id: 15),
+            makeGame(id: 16),
+            makeGame(id: 17),
+            makeGame(id: 18),
+            makeGame(id: 19),
+            makeGame(id: 20),
+            makeGame(id: 21),
+            makeGame(id: 22),
         ]
         remoteGamesProvider.stub = .success(secondBatchOfRemoteGames)
         
@@ -190,8 +190,8 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
         XCTAssertEqual(thirdPage.games.map(\.id), (cachedGames + firstBatchOfRemoteGames + secondBatchOfRemoteGames).map(\.id))
 
         let thirdBatchOfRemoteGames = [
-            Game(id: 23, name: "Game 23", imageId: nil),
-            Game(id: 24, name: "Game 24", imageId: nil)
+            makeGame(id: 23),
+            makeGame(id: 24)
         ]
         remoteGamesProvider.stub = .success(thirdBatchOfRemoteGames)
         
@@ -204,6 +204,10 @@ final class RemoteWithLocalFallbackGamesProviderIntegrationTests: XCTestCase {
 }
 
 // MARK: - Helpers
+
+private func makeGame(id: Int) -> Game {
+    Game(id: id, name: "Game \(id)", imageId: nil)
+}
 
 private final class Cache: GameCacheRetrievable, GameCacheStorable {
             
