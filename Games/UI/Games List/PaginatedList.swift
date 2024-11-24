@@ -4,17 +4,19 @@
 
 import SwiftUI
 
-struct PaginatedGamesView<GameView: View>: View {
-            
-    @ObservedObject private var viewModel: PaginatedGameListViewModel
-    private let makeGameView: (Game) -> GameView
+struct PaginatedList<ListItemView: View, ListItem: Equatable & Identifiable>: View {
+
+    typealias ViewModel = PaginatedListViewModel<ListItem>
+
+    @ObservedObject private var viewModel: ViewModel
+    private let makeListItemView: (ListItem) -> ListItemView
 
     init(
-        viewModel: PaginatedGameListViewModel,
-        makeGameView: @escaping (Game) -> GameView
+        viewModel: ViewModel,
+        makeListItemView: @escaping (ListItem) -> ListItemView
     ) {
         self.viewModel = viewModel
-        self.makeGameView = makeGameView
+        self.makeListItemView = makeListItemView
     }
         
     var body: some View {
@@ -38,25 +40,25 @@ struct PaginatedGamesView<GameView: View>: View {
         .performTaskOnFirstAppearance { await viewModel.load() }
     }
     
-    private func listView(for presentableGames: PresentableGames) -> some View {
+    private func listView(for presentable: ViewModel.Presentable) -> some View {
         List {
-            ForEach(presentableGames.games, id: \.id) { game in
-                makeGameView(game)
+            ForEach(presentable.items, id: \.id) { item in
+                makeListItemView(item)
                     .listRowSeparator(.hidden)
             }
-            loadMoreView(for: presentableGames)
+            loadMoreView(for: presentable)
         }
         .refreshable(action: { await viewModel.reload() })
     }
     
-    private func loadMoreView(for presentableGames: PresentableGames) -> some View {
-        presentableGames.loadMore.map { loadMore in
+    private func loadMoreView(for presentable: ViewModel.Presentable) -> some View {
+        presentable.loadMore.map { loadMore in
             HStack {
                 Spacer()
                 LoadMoreView(loadMore: loadMore)
                 Spacer()
             }
-            .id(presentableGames.games.count)
+            .id(presentable.items.count)
         }
     }
 }

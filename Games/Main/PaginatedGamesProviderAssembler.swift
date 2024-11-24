@@ -22,7 +22,7 @@ struct PaginatedGamesProviderAssembler {
                 return try await loadMore(currentGames: [])
             }
             return Paginated(
-                games: cachedGames,
+                items: cachedGames,
                 loadMore: { try await loadMore(currentGames: cachedGames) }
             )
         }
@@ -32,7 +32,7 @@ struct PaginatedGamesProviderAssembler {
         { try await loadMore(currentGames: []) }
     }
 
-    private func loadMore(currentGames: [Game]) async throws -> Paginated {
+    private func loadMore(currentGames: [Game]) async throws -> Paginated<Game> {
         let nextBatchOfGames = try await remoteGamesProvider.getGames(
             limit: pageSize,
             offset: currentGames.count
@@ -41,7 +41,7 @@ struct PaginatedGamesProviderAssembler {
         try cache.store(games: games)
         let reachedEnd = nextBatchOfGames.count != pageSize
         let page =  Paginated(
-            games: games,
+            items: games,
             loadMore: reachedEnd ? nil : { try await loadMore(currentGames: games) }
         )
         return page
