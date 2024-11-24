@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-public struct PerformTaskOnFirstAppearModifier: ViewModifier {
+private struct PerformTaskOnFirstAppearModifier: ViewModifier {
 
     private let action: () async -> Void
     
