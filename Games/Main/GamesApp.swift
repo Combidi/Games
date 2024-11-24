@@ -29,6 +29,9 @@ struct GamesApp: App {
 
     var body: some Scene {
         WindowGroup {
+            
+//            makeGameDetailView(game: Game(id: 1, name: "Fancy game", imageId: nil, rating: 92, description: "Beste spel ooit!"))
+            
             NavigationStack {
                 gameListView
                     .navigationTitle("Games")
@@ -73,6 +76,17 @@ struct GamesApp: App {
     }
 
     func makeGameDetailView(game: Game) -> some View {
-        Text(game.name)
+        List {
+            imageUrl(for: game.imageId).map {
+                AsyncImage(url: $0)
+            }
+            Text("Title: \(game.name)")
+            game.rating.map {
+                Text("Rating: \($0)")
+            }
+            game.description.map {
+                Text("Description: \($0)")
+            }
+        }
     }
 }
