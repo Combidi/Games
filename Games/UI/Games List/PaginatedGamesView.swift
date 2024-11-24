@@ -35,7 +35,7 @@ struct PaginatedGamesView<GameView: View>: View {
                 }
             }
         }
-        .task { await viewModel.load() }
+        .performTaskOnFirstAppearance { await viewModel.load() }
     }
     
     private func listView(for games: PresentableGames) -> some View {
@@ -57,5 +57,30 @@ struct PaginatedGamesView<GameView: View>: View {
                 Spacer()
             }
         }
+    }
+}
+
+public struct PerformTaskOnFirstAppearModifier: ViewModifier {
+
+    private let action: () async -> Void
+    @State private var hasAppeared = false
+    
+    public init(_ action: @escaping () async -> Void) {
+        self.action = action
+    }
+    
+    public func body(content: Content) -> some View {
+        content
+            .task {
+                guard !hasAppeared else { return }
+                hasAppeared = true
+                await action()
+            }
+    }
+}
+
+extension View {
+    func performTaskOnFirstAppearance(_ action: @escaping () async -> Void) -> some View {
+        return modifier(PerformTaskOnFirstAppearModifier(action))
     }
 }
