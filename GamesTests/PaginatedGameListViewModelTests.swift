@@ -104,8 +104,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                makeGame(id: 0),
-                makeGame(id: 1)
+                makeGame(id: 1),
+                makeGame(id: 2)
             ],
             "Expected to loaded games to be presented"
         )
@@ -115,8 +115,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                makeGame(id: 0),
-                makeGame(id: 1)
+                makeGame(id: 1),
+                makeGame(id: 2)
             ],
             "Expected presentation state not to be altered after load more failure"
         )
@@ -126,10 +126,10 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         XCTAssertEqual(
             presentedGames(sut),
             [
-                makeGame(id: 0),
-                makeGame(id: 1)
+                makeGame(id: 1),
                 makeGame(id: 2),
-                makeGame(id: 3)
+                makeGame(id: 3),
+                makeGame(id: 4)
             ],
             "Expected to present all games after successfull load more"
         )
@@ -254,6 +254,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
 // MARK: Helpers
 
 final private class LoaderSpy {
+    
     private(set) var loadGamesCallCount = 0
     
     var loadGamesStub: Result<[Game], Error> = .success([])
