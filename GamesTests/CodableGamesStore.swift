@@ -27,7 +27,15 @@ final class CodableGamesStoreTests: XCTestCase {
     
     func test_retrieveGames_test_deliversFoundValuesOnNonEmptyCache() throws {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
-        let games = [makeGame(id: 1)]
+        let games = [
+            Game(
+                id: 1,
+                name: "Nice game",
+                imageId: "any-image-id",
+                rating: nil,
+                description: nil
+            )
+        ]
         
         try sut.store(games: games)
         
