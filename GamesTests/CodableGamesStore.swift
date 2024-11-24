@@ -69,11 +69,24 @@ final class CodableGamesStoreTests: XCTestCase {
     
     func test_storeGames_overridesPreviouslyInsertedCacheValues() throws {
         let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
-        let firstGame = makeGame(id: 1)
+        let firstGame = Game(
+            id: 1,
+            name: "Nice game",
+            imageId: "any-image-id",
+            rating: 2.2,
+            description: "What a game...."
+        )
 
         try sut.store(games: [firstGame])
         
-        let secondGame = makeGame(id: 2)
+        let secondGame = Game(
+            id: 2,
+            name: "Even better game",
+            imageId: "another-image-id",
+            rating: 3.2,
+            description: "Meh?"
+        )
+
         try sut.store(games: [secondGame])
 
         XCTAssertEqual(try sut.retrieveGames(), [secondGame])
