@@ -20,26 +20,31 @@ struct LoadMoreView: View {
     @State private var state: LoadMoreState = .loading
     
     var body: some View {
-        switch state {
-        case .loading:
-            HStack {
-                ProgressView("Loading more...")
+        Group {
+            switch state {
+            case .loading:
+                HStack {
+                    ProgressView("Loading more...")
+                }
+            case .error:
+                Button(action: reload) {
+                    Text("Retry")
+                }
             }
-            .onAppear { load() }
-        case .error:
-            Button(action: load) {
-                Text("Retry")
-            }
+        }
+        .performTaskOnFirstAppearance {
+            await load()
         }
     }
     
-    private func load() {
-        Task {
-            do { try await loadMore() }
-            catch {
-                state = .error
-            }
-        }
+    private func load() async {
+        do { try await loadMore() }
+        catch { state = .error }
+    }
+    
+    private func reload() {
+        state = .loading
+        Task { await load() }
     }
 }
 

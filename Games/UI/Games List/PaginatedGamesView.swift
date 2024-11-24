@@ -38,24 +38,25 @@ struct PaginatedGamesView<GameView: View>: View {
         .performTaskOnFirstAppearance { await viewModel.load() }
     }
     
-    private func listView(for games: PresentableGames) -> some View {
+    private func listView(for presentableGames: PresentableGames) -> some View {
         List {
-            ForEach(games.games, id: \.id) { game in
+            ForEach(presentableGames.games, id: \.id) { game in
                 makeGameView(game)
                     .listRowSeparator(.hidden)
             }
-            loadMoreView(loadMore: games.loadMore)
+            loadMoreView(for: presentableGames)
         }
         .refreshable(action: { await viewModel.reload() })
     }
     
-    private func loadMoreView(loadMore: (() async throws -> Void)?) -> some View {
-        loadMore.map { loadMore in
+    private func loadMoreView(for presentableGames: PresentableGames) -> some View {
+        presentableGames.loadMore.map { loadMore in
             HStack {
                 Spacer()
                 LoadMoreView(loadMore: loadMore)
                 Spacer()
             }
+            .id(presentableGames.games.count)
         }
     }
 }
