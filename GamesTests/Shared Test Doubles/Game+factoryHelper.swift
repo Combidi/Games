@@ -5,5 +5,5 @@
 @testable import Games
 
 func makeGame(id: Int = 0) -> Game {
-    Game(id: id, name: "Game \(id)", imageId: nil)
+    Game(id: id, name: "Game \(id)", imageId: nil, rating: nil, description: nil)
 }

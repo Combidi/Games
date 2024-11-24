@@ -46,11 +46,13 @@ final class IgdbRemoteGamesProviderTests: XCTestCase {
                     "id": 119375,
                     "image_id": "co2k3z"
                 },
+                "rating": 60.0,
                 "name": "Commando"
             },
             {
                 "id": 95080,
-                "name": "Dotra"
+                "name": "Dotra",
+                "summary": "Izyum-Barvenkovo offensive operation of the Red Army was carried out from 17 to 27 July, 1943 by forces of South-Western Front in order to encircle and destroy the German group defending Donbass, as well to prevent the transfer of enemy troops to the Kursk region."
             }
         ]
         """
@@ -59,9 +61,27 @@ final class IgdbRemoteGamesProviderTests: XCTestCase {
         let games = try await sut.getGames(limit: 10, offset: 0)
         
         let expectedGames = [
-            Game(id: 131913, name: "Maji Kyun! Renaissance", imageId: "co5qi9"),
-            Game(id: 5668, name: "Commando", imageId: "co2k3z"),
-            Game(id: 95080, name: "Dotra", imageId: nil)
+            Game(
+                id: 131913,
+                name: "Maji Kyun! Renaissance",
+                imageId: "co5qi9",
+                rating: nil,
+                description: nil
+            ),
+            Game(
+                id: 5668,
+                name: "Commando",
+                imageId: "co2k3z",
+                rating: 60.0,
+                description: nil
+            ),
+            Game(
+                id: 95080,
+                name: "Dotra",
+                imageId: nil,
+                rating: nil,
+                description: "Izyum-Barvenkovo offensive operation of the Red Army was carried out from 17 to 27 July, 1943 by forces of South-Western Front in order to encircle and destroy the German group defending Donbass, as well to prevent the transfer of enemy troops to the Kursk region."
+            )
         ]
         XCTAssertEqual(games.count, 3)
         XCTAssertEqual(games[0], expectedGames[0])

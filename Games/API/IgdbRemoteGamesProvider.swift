@@ -10,6 +10,8 @@ struct IgdbRemoteGamesProvider: RemoteGamesProvider {
         let id: Int
         let name: String
         let cover: DecodableCoverImage?
+        let rating: Double?
+        let summary: String?
     }
     
     private struct DecodableCoverImage: Decodable {
@@ -31,7 +33,13 @@ struct IgdbRemoteGamesProvider: RemoteGamesProvider {
         let (data, _) = try await client.perform(request)
         let decodableGames = try JSONDecoder().decode([DecodableGame].self, from: data)
         let games = decodableGames.map {
-            Game(id: $0.id, name: $0.name, imageId: $0.cover?.image_id)
+            Game(
+                id: $0.id,
+                name: $0.name,
+                imageId: $0.cover?.image_id,
+                rating: $0.rating,
+                description: $0.summary
+            )
         }
         return games
     }

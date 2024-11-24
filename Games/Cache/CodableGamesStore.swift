@@ -22,7 +22,7 @@ struct CodableGamesStore: GamesCache {
         guard let data = try? Data(contentsOf: storeUrl) else { return [] }
         let codableGames = try JSONDecoder().decode([CodableGame].self, from: data)
         let games = codableGames.map {
-            Game(id: $0.id, name: $0.name, imageId: $0.imageId)
+            Game(id: $0.id, name: $0.name, imageId: $0.imageId, rating: nil, description: nil)
         }
         return games
     }

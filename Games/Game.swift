@@ -6,4 +6,6 @@ struct Game: Hashable {
     let id: Int
     let name: String
     let imageId: String?
+    let rating: Double?
+    let description: String?
 }
