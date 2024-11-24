@@ -10,6 +10,8 @@ struct CodableGamesStore: GamesCache {
         let id: Int
         let name: String
         let imageId: String?
+        let rating: Double?
+        let description: String?
     }
     
     private let storeUrl: URL
@@ -22,14 +24,26 @@ struct CodableGamesStore: GamesCache {
         guard let data = try? Data(contentsOf: storeUrl) else { return [] }
         let codableGames = try JSONDecoder().decode([CodableGame].self, from: data)
         let games = codableGames.map {
-            Game(id: $0.id, name: $0.name, imageId: $0.imageId, rating: nil, description: nil)
+            Game(
+                id: $0.id,
+                name: $0.name,
+                imageId: $0.imageId,
+                rating: $0.rating,
+                description: $0.description
+            )
         }
         return games
     }
     
     func store(games: [Game]) throws {
         let codableGames = games.map {
-            CodableGame(id: $0.id, name: $0.name, imageId: $0.imageId)
+            CodableGame(
+                id: $0.id,
+                name: $0.name,
+                imageId: $0.imageId,
+                rating: $0.rating,
+                description: $0.description
+            )
         }
         let encoded = try JSONEncoder().encode(codableGames)
         try encoded.write(to: storeUrl)

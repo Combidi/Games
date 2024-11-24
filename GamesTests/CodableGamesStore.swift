@@ -32,8 +32,8 @@ final class CodableGamesStoreTests: XCTestCase {
                 id: 1,
                 name: "Nice game",
                 imageId: "any-image-id",
-                rating: nil,
-                description: nil
+                rating: 2.2,
+                description: "What a game...."
             )
         ]
         
