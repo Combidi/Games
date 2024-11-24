@@ -15,7 +15,18 @@ struct GameDetailsView: View {
     var body: some View {
         List {
             imageUrl(for: game.imageId).map {
-                AsyncImage(url: $0)
+                AsyncImage(
+                    url: $0,
+                    content: { image in
+                        image
+                            .thumbnail
+
+                    },
+                    placeholder: {
+                        Image(systemName: "photo.badge.exclamationmark")
+                            .cover
+                    }
+                )
             }
             Text("Title: \(game.name)")
             game.rating.map {
@@ -26,14 +37,23 @@ struct GameDetailsView: View {
             }
         }
     }
-    
+
     private func imageUrl(for imageId: String?) -> URL? {
         guard
             let imageId = imageId,
-            let imageUrl = URL(string: "https://images.igdb.com/igdb/image/upload/t_thumb_2x/\(imageId).jpg")
+            let imageUrl = URL(string: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/\(imageId).jpg")
         else {
             return nil
         }
         return imageUrl
+    }
+}
+
+private extension Image {
+    var cover: some View {
+        self
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .cornerRadius(5)
     }
 }
