@@ -259,10 +259,10 @@ final private class LoaderSpy {
     
     var loadGamesStub: Result<[Game], Error> = .success([])
     
-    func loadGames() throws -> PaginatedGames {
+    func loadGames() throws -> Paginated {
         loadGamesCallCount += 1
         let games = try loadGamesStub.get()
-        return PaginatedGames(
+        return Paginated(
             games: games,
             loadMore: makeLoadMore(currentGames: games)
         )
@@ -272,10 +272,10 @@ final private class LoaderSpy {
     
     var reloadGamesStub: Result<[Game], Error> = .success([])
     
-    func reloadGames() throws -> PaginatedGames {
+    func reloadGames() throws -> Paginated {
         reloadGamesCallCount += 1
         let games = try reloadGamesStub.get()
-        return PaginatedGames(
+        return Paginated(
             games: games,
             loadMore: makeLoadMore(currentGames: games)
         )
@@ -283,12 +283,12 @@ final private class LoaderSpy {
 
     var loadMoreGamesStub: [Result<[Game], Error>] = []
 
-    private func makeLoadMore(currentGames: [Game]) -> (() async throws -> PaginatedGames)? {
+    private func makeLoadMore(currentGames: [Game]) -> (() async throws -> Paginated)? {
         if loadMoreGamesStub.isEmpty { return nil }
         return {
             let nextStub = self.loadMoreGamesStub.removeFirst()
             let games = try currentGames + nextStub.get()
-            return PaginatedGames(games: games, loadMore: self.makeLoadMore(currentGames: games))
+            return Paginated(games: games, loadMore: self.makeLoadMore(currentGames: games))
         }
     }
 }
