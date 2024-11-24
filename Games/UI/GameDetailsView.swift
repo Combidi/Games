@@ -19,7 +19,7 @@ struct GameDetailsView: View {
                     url: $0,
                     content: { image in
                         image
-                            .thumbnail
+                            .cover
 
                     },
                     placeholder: {
