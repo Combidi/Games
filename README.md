@@ -1,1 +1,2 @@
-Fancy empty README file...
+
+![image](Diagram.jpg)
