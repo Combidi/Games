@@ -6,15 +6,26 @@ import SwiftUI
 
 struct GameDetailsView: View {
     
-    private let game: Game
+    private let name: String
+    private let rating: Double?
+    private let description: String?
+    private let imageUrl: URL?
     
-    init(game: Game) {
-        self.game = game
+    init(
+        name: String,
+        rating: Double?,
+        description: String?,
+        imageUrl: URL?
+    ) {
+        self.name = name
+        self.rating = rating
+        self.description = description
+        self.imageUrl = imageUrl
     }
     
     var body: some View {
         List {
-            imageUrl(for: game.imageId).map {
+            imageUrl.map {
                 AsyncImage(
                     url: $0,
                     content: { image in
@@ -28,24 +39,14 @@ struct GameDetailsView: View {
                     }
                 )
             }
-            Text("Title: \(game.name)")
-            game.rating.map {
+            Text("Title: \(name)")
+            rating.map {
                 Text("Rating: \($0)")
             }
-            game.description.map {
+            description.map {
                 Text("Description: \($0)")
             }
         }
-    }
-
-    private func imageUrl(for imageId: String?) -> URL? {
-        guard
-            let imageId = imageId,
-            let imageUrl = URL(string: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/\(imageId).jpg")
-        else {
-            return nil
-        }
-        return imageUrl
     }
 }
 

@@ -29,9 +29,6 @@ struct GamesApp: App {
 
     var body: some Scene {
         WindowGroup {
-            
-//            makeGameDetailView(game: Game(id: 1, name: "Fancy game", imageId: nil, rating: 92, description: "Beste spel ooit!"))
-            
             NavigationStack {
                 gameListView
                     .navigationTitle("Games")
@@ -65,6 +62,15 @@ struct GamesApp: App {
         }
     }
     
+    private func makeGameDetailView(game: Game) -> some View {
+        GameDetailsView(
+            name: game.name,
+            rating: game.rating,
+            description: game.description,
+            imageUrl: imageUrl(for: game.imageId)
+        )
+    }
+
     private func imageUrl(for imageId: String?) -> URL? {
         guard
             let imageId = imageId,
@@ -73,9 +79,5 @@ struct GamesApp: App {
             return nil
         }
         return imageUrl
-    }
-
-    func makeGameDetailView(game: Game) -> some View {
-        GameDetailsView(game: game)
     }
 }
