@@ -50,7 +50,7 @@ private extension Image {
         self
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .frame(width: 100, height: 100, alignment: .leading)
+            .frame(maxWidth: 100)
             .cornerRadius(5)
     }
 }
@@ -58,7 +58,7 @@ private extension Image {
 #Preview {
     
     func imageUrl(imageId: String) -> URL {
-        URL(string: "https://images.igdb.com/igdb/image/upload/t_thumb_2x/\(imageId).jpg")!
+        URL(string: "https://images.igdb.com/igdb/image/upload/t_cover_small_2x/\(imageId).jpg")!
     }
     
     return List {
