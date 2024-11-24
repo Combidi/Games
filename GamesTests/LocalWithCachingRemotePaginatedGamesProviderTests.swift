@@ -23,7 +23,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         )
             .makeCachingRemotePaginatedGamesProvider()
         
-        let loadedGames = try await getGames().games
+        let loadedGames = try await getGames().items
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
@@ -44,7 +44,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         )
             .makeCachingRemotePaginatedGamesProvider()
         
-        let loadedGames = try await getGames().games
+        let loadedGames = try await getGames().items
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
@@ -64,7 +64,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         )
             .makeCachingRemotePaginatedGamesProvider()
         
-        let loadedGames = try await getGames().games
+        let loadedGames = try await getGames().items
         
         XCTAssertEqual(loadedGames, remoteGames)
     }
@@ -84,7 +84,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         ]
         remoteGamesProvider.stub = .success(remoteGames)
         
-        _ = try await getGames().games
+        _ = try await getGames().items
         
         let cachedGames = try cache.retrieveGames()
         
@@ -116,7 +116,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         
         let firstPage = try await getGames()
         
-        XCTAssertEqual(firstPage.games.map(\.id), firstBatchOfRemoteGames.map(\.id))
+        XCTAssertEqual(firstPage.items.map(\.id), firstBatchOfRemoteGames.map(\.id))
         
         let secondBatchOfRemoteGames = [
             makeGame(id: 13),
@@ -134,7 +134,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         
         let secondPage = try await firstPage.loadMore!()
         
-        XCTAssertEqual(secondPage.games.map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames).map(\.id))
+        XCTAssertEqual(secondPage.items.map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames).map(\.id))
         
         let thirdBatchOfRemoteGames = [
             makeGame(id: 23),
@@ -144,7 +144,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
         
         let thirdPage = try await secondPage.loadMore!()
         
-        XCTAssertEqual(thirdPage.games.map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
+        XCTAssertEqual(thirdPage.items.map(\.id), (firstBatchOfRemoteGames + secondBatchOfRemoteGames + thirdBatchOfRemoteGames).map(\.id))
         
         XCTAssertNil(thirdPage.loadMore, "Expected no load more when the last page has been loaded")
     }

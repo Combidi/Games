@@ -7,12 +7,14 @@ import Combine
 @testable import Games
 
 @MainActor
-final class PaginatedGameListViewModelTests: XCTestCase {
+final class PaginatedListViewModelTests: XCTestCase {
+    
+    typealias SUT = PaginatedListViewModel<Game>
     
     private let loader = LoaderSpy()
-    private lazy var sut = PaginatedGameListViewModel(
-        loadGames: loader.loadGames,
-        reloadGames: loader.reloadGames
+    private lazy var sut = SUT(
+        load: loader.loadGames,
+        reload: loader.reloadGames
     )
     
     func test_load_requestsGames() async {
@@ -29,7 +31,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
     
     func test_states_duringLoadingGames() async throws {
         var cancellables: Set<AnyCancellable> = []
-        var capturedStates: [PaginatedGameListViewModel.LoadingState] = []
+        var capturedStates: [SUT.LoadingState] = []
         sut.$state
             .sink { capturedStates.append($0) }
             .store(in: &cancellables)
@@ -65,7 +67,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
                 .loading,
                 .error,
                 .loading,
-                .loaded(PresentableGames(games: [firstGame], loadMore: nil))
+                .loaded(.init(items: [firstGame], loadMore: nil))
             ],
             "Expected second .loading state followed by .loaded state after successful loading"
         )
@@ -78,8 +80,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
                 .loading,
                 .error,
                 .loading,
-                .loaded(PresentableGames(games: [firstGame], loadMore: nil)),
-                .loaded(PresentableGames(games: [firstGame, secondGame], loadMore: nil))
+                .loaded(.init(items: [firstGame], loadMore: nil)),
+                .loaded(.init(items: [firstGame, secondGame], loadMore: nil))
             ],
             "Expected second .loaded state without .loading state after successfully loading more"
         )
@@ -152,7 +154,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         await sut.load()
         
         var cancellables: Set<AnyCancellable> = []
-        var capturedStates: [PaginatedGameListViewModel.LoadingState] = []
+        var capturedStates: [SUT.LoadingState] = []
         sut.$state
             .dropFirst()
             .sink { capturedStates.append($0) }
@@ -173,7 +175,7 @@ final class PaginatedGameListViewModelTests: XCTestCase {
         
         await sut.reload()
 
-        let expectedPresentable = PresentableGames(games: [game], loadMore: nil)
+        let expectedPresentable = SUT.Presentable(items: [game], loadMore: nil)
         XCTAssertEqual(
             capturedStates, [.error, .loaded(expectedPresentable)],
             "Expected second loading state followed by presentation state after successful loading"
@@ -238,11 +240,11 @@ final class PaginatedGameListViewModelTests: XCTestCase {
     
     // MARK: Helpers
     
-    private func presentedGames(_ sut: PaginatedGameListViewModel) -> [Game]? {
-        presentedPage(sut)?.games
+    private func presentedGames(_ sut: PaginatedListViewModel<Game>) -> [Game]? {
+        presentedPage(sut)?.items
     }
     
-    private func presentedPage(_ sut: PaginatedGameListViewModel) -> PresentableGames? {
+    private func presentedPage(_ sut: PaginatedListViewModel<Game>) -> PresentableListItems<Game>? {
         guard case let .loaded(page) = sut.state else {
             return nil
         }
@@ -259,11 +261,11 @@ final private class LoaderSpy {
     
     var loadGamesStub: Result<[Game], Error> = .success([])
     
-    func loadGames() throws -> Paginated {
+    func loadGames() throws -> Paginated<Game> {
         loadGamesCallCount += 1
         let games = try loadGamesStub.get()
         return Paginated(
-            games: games,
+            items: games,
             loadMore: makeLoadMore(currentGames: games)
         )
     }
@@ -272,23 +274,23 @@ final private class LoaderSpy {
     
     var reloadGamesStub: Result<[Game], Error> = .success([])
     
-    func reloadGames() throws -> Paginated {
+    func reloadGames() throws -> Paginated<Game> {
         reloadGamesCallCount += 1
         let games = try reloadGamesStub.get()
         return Paginated(
-            games: games,
+            items: games,
             loadMore: makeLoadMore(currentGames: games)
         )
     }
 
     var loadMoreGamesStub: [Result<[Game], Error>] = []
 
-    private func makeLoadMore(currentGames: [Game]) -> (() async throws -> Paginated)? {
+    private func makeLoadMore(currentGames: [Game]) -> (() async throws -> Paginated<Game>)? {
         if loadMoreGamesStub.isEmpty { return nil }
         return {
             let nextStub = self.loadMoreGamesStub.removeFirst()
             let games = try currentGames + nextStub.get()
-            return Paginated(games: games, loadMore: self.makeLoadMore(currentGames: games))
+            return Paginated(items: games, loadMore: self.makeLoadMore(currentGames: games))
         }
     }
 }
