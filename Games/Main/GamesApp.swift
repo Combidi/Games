@@ -76,17 +76,6 @@ struct GamesApp: App {
     }
 
     func makeGameDetailView(game: Game) -> some View {
-        List {
-            imageUrl(for: game.imageId).map {
-                AsyncImage(url: $0)
-            }
-            Text("Title: \(game.name)")
-            game.rating.map {
-                Text("Rating: \($0)")
-            }
-            game.description.map {
-                Text("Description: \($0)")
-            }
-        }
+        GameDetailsView(game: game)
     }
 }
