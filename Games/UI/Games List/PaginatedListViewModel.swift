@@ -5,41 +5,44 @@
 import Foundation
 
 @MainActor
-final class PaginatedGameListViewModel: ObservableObject {
-    
+final class PaginatedListViewModel<ListItem: Equatable & Identifiable>: ObservableObject {
+
+    typealias Page = Paginated<ListItem>
+    typealias Presentable = PresentableListItems<ListItem>
+
     enum LoadingState: Equatable {
         case loading
         case error
-        case loaded(PresentableGames)
+        case loaded(Presentable)
     }
     
-    private let loadGames: () async throws -> PaginatedGames
-    private let reloadGames: () async throws -> PaginatedGames
+    private let load: () async throws -> Page
+    private let reload: () async throws -> Page
     
     init(
-        loadGames: @escaping () async throws -> PaginatedGames,
-        reloadGames: @escaping () async throws -> PaginatedGames
+        load: @escaping () async throws -> Page,
+        reload: @escaping () async throws -> Page
     ) {
-        self.loadGames = loadGames
-        self.reloadGames = reloadGames
+        self.load = load
+        self.reload = reload
     }
     
     @Published private(set) var state: LoadingState = .loading
     
     func load() async {
         if state != .loading { state = .loading }
-        await load(using: loadGames)
+        await load(using: load)
     }
     
     func reload() async {
-        await load(using: reloadGames)
+        await load(using: reload)
     }
     
-    private func load(using loadAction: () async throws -> PaginatedGames) async {
+    private func load(using loadAction: () async throws -> Page) async {
         do {
             let page = try await loadAction()
-            let presentable = PresentableGames(
-                games: page.games,
+            let presentable = Presentable(
+                items: page.items,
                 loadMore: loadNextPage(current: page)
             )
             state = .loaded(presentable)
@@ -49,12 +52,12 @@ final class PaginatedGameListViewModel: ObservableObject {
         }
     }
     
-    private func loadNextPage(current: PaginatedGames) -> (() async throws -> Void)? {
+    private func loadNextPage(current: Page) -> (() async throws -> Void)? {
         guard let loadMore = current.loadMore else { return nil }
         return { [self] in
             let nextPage = try await loadMore()
-            let presentable = PresentableGames(
-                games: nextPage.games,
+            let presentable = Presentable(
+                items: nextPage.items,
                 loadMore: loadNextPage(current: nextPage)
             )
             state = .loaded(presentable)

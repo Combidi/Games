@@ -38,12 +38,12 @@ struct GamesApp: App {
     }
     
     private var gameListView: some View {
-        PaginatedGamesView(
-            viewModel: PaginatedGameListViewModel(
-                loadGames: providerAssembler.makeLocalWithCachingRemotePaginatedGamesProvider(),
-                reloadGames: providerAssembler.makeCachingRemotePaginatedGamesProvider()
+        PaginatedList(
+            viewModel: PaginatedListViewModel(
+                load: providerAssembler.makeLocalWithCachingRemotePaginatedGamesProvider(),
+                reload: providerAssembler.makeCachingRemotePaginatedGamesProvider()
             ),
-            makeGameView: makeGameListItemView
+            makeListItemView: makeGameListItemView
         )
         .navigationTitle("Games")
         .navigationDestination(
