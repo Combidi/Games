@@ -20,7 +20,7 @@ final class IgdbRemoteGamesProviderTests: XCTestCase {
         XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(request.url, URL(string: "https://api.igdb.com/v4/games")!)
         XCTAssertEqual(request.value(forHTTPHeaderField: "Accept"), "application/json")
-        XCTAssertEqual(request.httpBody.map { String(data: $0, encoding: .utf8) }, "f name, cover.image_id; l 10; o 30;")
+        XCTAssertEqual(request.httpBody.map { String(data: $0, encoding: .utf8) }, "f name, rating, summary, cover.image_id; l 10; o 30;")
     }
     
     func test_getGames_deliversErrorOnClientError() async {
