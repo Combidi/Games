@@ -52,8 +52,8 @@ final class PaginatedGameListViewModelTests: XCTestCase {
             "Expected error state on loading failure"
         )
 
-        let firstGame = Game(id: 0, name: "Nice game", imageId: nil)
-        let secondGame = Game(id: 1, name: "Another game", imageId: nil)
+        let firstGame = makeGame(id: 0)
+        let secondGame = makeGame(id: 1)
         loader.loadGamesStub = .success([firstGame])
         loader.loadMoreGamesStub = [.success([secondGame])]
         
