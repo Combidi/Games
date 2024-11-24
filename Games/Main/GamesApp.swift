@@ -31,14 +31,6 @@ struct GamesApp: App {
         WindowGroup {
             NavigationStack {
                 gameListView
-                    .navigationTitle("Games")
-                    .navigationDestination(
-                        for: Game.self,
-                        destination: { game in
-                            makeGameDetailView(game: game)
-                                .navigationTitle(game.name)
-                        }
-                    )
             }
         }
     }
@@ -50,6 +42,11 @@ struct GamesApp: App {
                 reloadGames: assembler.makeCachingRemotePaginatedGamesProvider()
             ),
             makeGameView: makeGameListItemView
+        )
+        .navigationTitle("Games")
+        .navigationDestination(
+            for: Game.self,
+            destination: makeGameDetailView
         )
     }
     
@@ -69,6 +66,7 @@ struct GamesApp: App {
             description: game.description,
             imageUrl: imageUrl(for: game.imageId)
         )
+        .navigationTitle(game.name)
     }
 
     private func imageUrl(for imageId: String?) -> URL? {
