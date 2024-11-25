@@ -19,14 +19,16 @@ final class CodableGamesStoreTests: XCTestCase {
         try? FileManager.default.removeItem(at: testSpecificStoreURL)
     }
     
-    func test_retrieveGames_deliversEmptyGamesOnEmptyCache() {
-        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+    private func makeSUT(storeUrl: URL = testSpecificStoreURL) -> CodableGamesStore {
+        CodableGamesStore(storeUrl: storeUrl)
+    }
     
-        XCTAssertEqual(try! sut.retrieveGames(), [])
+    func test_retrieveGames_deliversEmptyGamesOnEmptyCache() {
+        XCTAssertEqual(try! makeSUT().retrieveGames(), [])
     }
     
     func test_retrieveGames_test_deliversFoundValuesOnNonEmptyCache() throws {
-        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let sut = makeSUT()
         let games = [
             Game(
                 id: 1,
@@ -45,22 +47,22 @@ final class CodableGamesStoreTests: XCTestCase {
     }
     
     func test_retrieveGames_deliversErrorOnRetrievalError() {
-        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let sut = makeSUT(storeUrl: testSpecificStoreURL)
 
         try! "invalid data".write(to: testSpecificStoreURL, atomically: false, encoding: .utf8)
      
-        XCTAssertThrowsError(try sut.retrieveGames())
+        XCTAssertThrowsError(try makeSUT().retrieveGames())
     }
     
     func test_storeGames_deliversNoErrorOnEmptyCache() {
-        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let sut = makeSUT()
         let games = [makeGame(id: 1)]
 
         XCTAssertNoThrow(try sut.store(games: games))
     }
 
     func test_storeGames_deliversNoErrorOnNonEmptyCache() {
-        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let sut = makeSUT()
         let games = [makeGame(id: 1)]
 
         XCTAssertNoThrow(try sut.store(games: games))
@@ -68,7 +70,7 @@ final class CodableGamesStoreTests: XCTestCase {
     }
     
     func test_storeGames_overridesPreviouslyInsertedCacheValues() throws {
-        let sut = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let sut = makeSUT()
         let firstGame = Game(
             id: 1,
             name: "Nice game",
@@ -94,7 +96,7 @@ final class CodableGamesStoreTests: XCTestCase {
     
     func test_storeGames_deliversErrorOnInsertionError() {
         let invalidStoreURL = URL(string: "invalid://store-url")!
-        let sut = CodableGamesStore(storeUrl: invalidStoreURL)
+        let sut = makeSUT(storeUrl: invalidStoreURL)
 
         XCTAssertThrowsError(try sut.store(games: [makeGame()]))
     }
@@ -105,16 +107,16 @@ final class CodableGamesStoreTests: XCTestCase {
             makeGame(id: 2)
         ]
 
-        let sutToInsert = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let sutToInsert = makeSUT()
         try sutToInsert.store(games: games)
 
-        let sutToRetrieve = CodableGamesStore(storeUrl: testSpecificStoreURL)
+        let sutToRetrieve = makeSUT()
         let retrievedGames = try sutToRetrieve.retrieveGames()
 
         XCTAssertEqual(retrievedGames, games)
     }
-    
-    private var testSpecificStoreURL: URL {
-        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("\(type(of: self)).store")
-    }
+}
+
+private var testSpecificStoreURL: URL {
+    FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("CodableGamesStoreTests.store")
 }

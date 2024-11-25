@@ -5,10 +5,8 @@
 @testable import Games
 
 final class GamesCacheStub: GamesCache {
-            
+                   
     var stub: Result<[Game], Error> = .success([])
-       
-    init() {}
     
     func retrieveGames() throws -> [Game] {
         try stub.get()
