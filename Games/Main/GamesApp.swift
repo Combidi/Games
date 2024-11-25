@@ -74,7 +74,7 @@ struct GamesApp: App {
     private func imageUrl(for imageId: String?) -> URL? {
         guard
             let imageId = imageId,
-            let imageUrl = URL(string: "https://images.igdb.com/igdb/image/upload/t_cover_small_2x/\(imageId).jpg")
+            let imageUrl = URL(string: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/\(imageId).jpg")
         else {
             return nil
         }
