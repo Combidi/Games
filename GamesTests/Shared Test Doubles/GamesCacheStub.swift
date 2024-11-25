@@ -6,11 +6,9 @@
 
 final class GamesCacheStub: GamesCache {
             
-    private var stub: Result<[Game], Error>
+    var stub: Result<[Game], Error> = .success([])
        
-    init(stub: Result<[Game], Error>) {
-        self.stub = stub
-    }
+    init() {}
     
     func retrieveGames() throws -> [Game] {
         try stub.get()

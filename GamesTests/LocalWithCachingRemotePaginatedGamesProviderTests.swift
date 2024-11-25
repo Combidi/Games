@@ -7,62 +7,51 @@ import XCTest
  
 final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
     
+    private lazy var cache = GamesCacheStub()
+    private lazy var remoteGamesProvider = RemoteGamesProviderStub()
+
+    private func getGames() async throws -> Paginated<Game> {
+        let sut = PaginatedGamesProviderAssembler(
+            cache: cache,
+            remoteGamesProvider: remoteGamesProvider
+        )
+        let getGames = sut.makeCachingRemotePaginatedGamesProvider()
+        return try await getGames()
+    }
+
     func test_getGames_withEmptyGamesCache_deliversGamesFromRemote() async throws {
-        
-        let cache = GamesCacheStub(stub: .success([]))
-        let remoteGamesProvider = RemoteGamesProviderStub()
+        cache.stub = .success([])
         let gamesFromRemote = [
             makeGame(id: 1),
             makeGame(id: 2)
         ]
         remoteGamesProvider.stub = .success(gamesFromRemote)
-        
-        let getGames = PaginatedGamesProviderAssembler(
-            cache: cache,
-            remoteGamesProvider: remoteGamesProvider
-        )
-            .makeCachingRemotePaginatedGamesProvider()
-        
+                
         let loadedGames = try await getGames().items
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
     
     func test_getGames_withGamesCacheError_deliversGamesFromRemote() async throws {
-        
-        let cache = GamesCacheStub(stub: .failure(NSError(domain: "", code: 1)))
-        let remoteGamesProvider = RemoteGamesProviderStub()
+        cache.stub = .failure(NSError(domain: "", code: 1))
         let gamesFromRemote = [
             makeGame(id: 1),
             makeGame(id: 2)
         ]
         remoteGamesProvider.stub = .success(gamesFromRemote)
-        
-        let getGames = PaginatedGamesProviderAssembler(
-            cache: cache,
-            remoteGamesProvider: remoteGamesProvider
-        )
-            .makeCachingRemotePaginatedGamesProvider()
-        
+                
         let loadedGames = try await getGames().items
         
         XCTAssertEqual(loadedGames, gamesFromRemote)
     }
     
     func test_getGames_withNonEmptyGamesCache_deliversGamesFromRemote() async throws {
-        
-        let cache = GamesCacheStub(stub: .success([makeGame(id: 1)]))
-        let remoteGamesProvider = RemoteGamesProviderStub()
+        cache.stub = .success([makeGame(id: 1)])
         let remoteGames = [
             makeGame(id: 2),
             makeGame(id: 3)
         ]
         remoteGamesProvider.stub = .success(remoteGames)
-        let getGames = PaginatedGamesProviderAssembler(
-            cache: cache,
-            remoteGamesProvider: remoteGamesProvider
-        )
-            .makeCachingRemotePaginatedGamesProvider()
         
         let loadedGames = try await getGames().items
         
@@ -70,14 +59,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
     }
     
     func test_getGames_cachesGamesReceivedFromRemote() async throws {
-        
-        let cache = GamesCacheStub(stub: .success([]))
-        let remoteGamesProvider = RemoteGamesProviderStub()
-        let getGames = PaginatedGamesProviderAssembler(
-            cache: cache,
-            remoteGamesProvider: remoteGamesProvider
-        )
-            .makeCachingRemotePaginatedGamesProvider()
+        cache.stub = .success([])
         let remoteGames = [
             makeGame(id: 1),
             makeGame(id: 2)
@@ -92,14 +74,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
     }
     
     func test_loadMore_deliversAccumulatedGamesFromRemote() async throws {
-        
-        let remoteGamesProvider = RemoteGamesProviderStub()
-        let getGames = PaginatedGamesProviderAssembler(
-            cache: GamesCacheStub(stub: .success([])),
-            remoteGamesProvider: remoteGamesProvider
-        )
-            .makeCachingRemotePaginatedGamesProvider()
-        
+        cache.stub = .success([])
         let firstBatchOfRemoteGames = [
             makeGame(id: 3),
             makeGame(id: 4),
@@ -150,15 +125,7 @@ final class LocalWithCachingRemotePaginatedGamesProviderTests: XCTestCase {
     }
 
     func test_loadMore_storesAccumulatedGamesInCache() async throws {
-        
-        let cache = GamesCacheStub(stub: .success([]))
-        let remoteGamesProvider = RemoteGamesProviderStub()
-        let getGames = PaginatedGamesProviderAssembler(
-            cache: cache,
-            remoteGamesProvider: remoteGamesProvider
-        )
-        .makeCachingRemotePaginatedGamesProvider()
-                
+        cache.stub = .success([])                
         let firstBatchOfRemoteGames = [
             makeGame(id: 3),
             makeGame(id: 4),
